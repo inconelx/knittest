@@ -63,10 +63,10 @@ export function initTokenRefresher() {
   }
 
   const refreshInterval = Math.max(expiresSeconds - 60, 60)
-  console.log(Math.floor(Date.now() / 1000))
-  console.log(refreshInterval)
-  console.log(Math.floor(Date.now() / 1000) + refreshInterval + 30)
-  console.log(expiresAt)
+  // console.log(Math.floor(Date.now() / 1000))
+  // console.log(refreshInterval)
+  // console.log(Math.floor(Date.now() / 1000) + refreshInterval + 30)
+  // console.log(expiresAt)
   if (Math.floor(Date.now() / 1000) + refreshInterval + 30 > expiresAt) {
     refreshToken()
   }

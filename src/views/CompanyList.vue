@@ -142,8 +142,10 @@ const deleteSelected = async () => {
     await ElMessageBox.confirm('确定要删除选中的公司吗？', '提示', {
       type: 'warning',
     })
-    const res = await knit_api.post('/api/company/delete', {
-      ids: selectedIds.value,
+    const res = await knit_api.post('/api/generic/delete', {
+      table_name: 'knit_company',
+      pk_name: 'company_id',
+      pk_values: selectedIds.value,
     })
     ElMessage.success(res.data.message || '删除成功')
     selectedIds.value = []
