@@ -39,7 +39,7 @@ const handleLogin = async () => {
     localStorage.setItem('token', res.data.token)
     localStorage.setItem('expires_at', res.data.expires_at)
     localStorage.setItem('expires_seconds', res.data.expires_seconds)
-    initTokenRefresher()
+    // initTokenRefresher()
     router.push('/')
   } catch (err) {
     error.value = err.response?.data?.error || '登录失败'

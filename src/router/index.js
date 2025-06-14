@@ -5,7 +5,7 @@ import Login from '@/views/Login.vue'
 import SourceMain from '@/views/SourceMain.vue'
 import CompanyList from '@/views/CompanyList.vue'
 import EditCompany from '@/views/EditCompany.vue'
-import { knit_api } from '@/utils/auth.js'
+import { initTokenRefresher, knit_api } from '@/utils/auth.js'
 import axios from 'axios'
 
 const routes = [
@@ -54,7 +54,10 @@ router.beforeEach(async (to, from, next) => {
     if (!token) return next('/login')
     try {
       const res = await knit_api.get('/api/check-login')
-      if (res.data.logged_in) next()
+      if (res.data.logged_in){
+        initTokenRefresher()
+        next()
+      } 
       else next('/login')
     } catch {
       next('/login')
