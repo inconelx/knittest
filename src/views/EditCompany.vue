@@ -54,6 +54,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
+import { knit_api } from '@/utils/auth.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -88,7 +89,7 @@ onMounted(async () => {
 
   if (companyId.value) {
     try {
-      const res = await axios.post('http://localhost:5000/api/company/query', {
+      const res = await knit_api.post('/api/company/query', {
         page: 1,
         page_size: 1,
         filters: {
@@ -108,7 +109,7 @@ onMounted(async () => {
   }
 
   try {
-    const res = await axios.get('http://localhost:5000/api/combobox', {
+    const res = await knit_api.get('/api/combobox', {
       params: {
         table_name: 'knit_company',
         table_field_name: 'company_type',
@@ -126,7 +127,7 @@ const onSave = async () => {
     if (!valid) return
     try {
       if (isEdit.value) {
-        await axios.post('http://localhost:5000/api/generic/update', {
+        await knit_api.post('/api/generic/update', {
           table_name: 'knit_company',
           pk_name: 'company_id',
           pk_value: companyId.value,
@@ -134,7 +135,7 @@ const onSave = async () => {
         })
         ElMessage.success('更新成功')
       } else {
-        await axios.post('http://localhost:5000/api/generic/insert', {
+        await knit_api.post('/api/generic/insert', {
           table_name: 'knit_company',
           pk_name: 'company_id',
           json_data: form.value,

@@ -2,8 +2,40 @@
 import axios from 'axios'
 import { useRouter } from 'vue-router'
 
+export const knit_api = axios.create({
+  baseURL: 'http://localhost:5000',
+})
+
+// 请求拦截器：自动加上 token
+knit_api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token')
+    if (token) {
+      config.headers['Authorization'] = token
+    }
+    return config
+  },
+  (error) => Promise.reject(error),
+)
+// 响应拦截器：处理 token 失效等
+knit_api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      console.warn('⛔ 登录状态失效，跳转登录页')
+      localStorage.clear()
+      router.push('/login')
+    }
+    return Promise.reject(error)
+  },
+)
+
 const router = useRouter()
 let refreshTimer = null // 全局唯一计时器引用
+
+// function(){
+
+// }
 
 export function initTokenRefresher() {
   if (refreshTimer) {
@@ -24,13 +56,7 @@ export function initTokenRefresher() {
   refreshTimer = setInterval(async () => {
     try {
       const token = localStorage.getItem('token')
-      const res = await axios.post(
-        'http://localhost:5000/api/refresh-token',
-        {},
-        {
-          headers: { Authorization: token },
-        },
-      )
+      const res = await knit_api.post('/api/refresh-token')
 
       localStorage.setItem('token', res.data.token)
       localStorage.setItem('expires_at', res.data.expires_at)
@@ -53,28 +79,3 @@ export function stopTokenRefresher() {
     console.log('⏹️ Token refresher stopped.')
   }
 }
-
-// 请求拦截器：自动加上 token
-axios.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token')
-    if (token) {
-      config.headers['Authorization'] = token
-    }
-    return config
-  },
-  (error) => Promise.reject(error),
-)
-
-// 响应拦截器：处理 token 失效等
-axios.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response && error.response.status === 401) {
-      console.warn('⛔ 登录状态失效，跳转登录页')
-      localStorage.clear()
-      router.push('/login')
-    }
-    return Promise.reject(error)
-  },
-)

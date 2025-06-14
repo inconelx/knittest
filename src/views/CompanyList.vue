@@ -58,6 +58,7 @@ import axios from 'axios'
 import dayjs from 'dayjs'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { knit_api } from '@/utils/auth.js'
 import utc from 'dayjs/plugin/utc'
 dayjs.extend(utc)
 
@@ -77,7 +78,7 @@ const pagination = ref({
 const fetchCompanies = async () => {
   loading.value = true
   try {
-    const res = await axios.post('http://localhost:5000/api/company/query', {
+    const res = await knit_api.post('/api/company/query', {
       page: pagination.value.page,
       page_size: pagination.value.pageSize,
       filters: {}, // 可扩展
@@ -92,7 +93,7 @@ const fetchCompanies = async () => {
   }
 
   try {
-    const res = await axios.get('http://localhost:5000/api/combobox', {
+    const res = await knit_api.get('/api/combobox', {
       params: {
         table_name: 'knit_company',
         table_field_name: 'company_type',
@@ -141,7 +142,7 @@ const deleteSelected = async () => {
     await ElMessageBox.confirm('确定要删除选中的公司吗？', '提示', {
       type: 'warning',
     })
-    const res = await axios.post('http://localhost:5000/api/company/delete', {
+    const res = await knit_api.post('/api/company/delete', {
       ids: selectedIds.value,
     })
     ElMessage.success(res.data.message || '删除成功')

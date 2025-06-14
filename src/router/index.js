@@ -5,6 +5,8 @@ import Login from '@/views/Login.vue'
 import SourceMain from '@/views/SourceMain.vue'
 import CompanyList from '@/views/CompanyList.vue'
 import EditCompany from '@/views/EditCompany.vue'
+import { knit_api } from '@/utils/auth.js'
+import axios from 'axios'
 
 const routes = [
   { path: '/login', component: Login },
@@ -51,11 +53,8 @@ router.beforeEach(async (to, from, next) => {
     const token = localStorage.getItem('token')
     if (!token) return next('/login')
     try {
-      const res = await fetch('http://localhost:5000/api/check-login', {
-        headers: { Authorization: token },
-      })
-      const data = await res.json()
-      if (data.logged_in) next()
+      const res = await knit_api.get('/api/check-login')
+      if (res.data.logged_in) next()
       else next('/login')
     } catch {
       next('/login')

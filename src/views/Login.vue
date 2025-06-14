@@ -23,7 +23,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
-import { initTokenRefresher } from '@/utils/auth.js'
+import { initTokenRefresher,knit_api } from '@/utils/auth.js'
 
 const router = useRouter()
 const form = ref({
@@ -35,7 +35,7 @@ const error = ref('')
 const handleLogin = async () => {
   error.value = ''
   try {
-    const res = await axios.post('http://localhost:5000/api/login', form.value)
+    const res = await knit_api.post('/api/login', form.value)
     localStorage.setItem('token', res.data.token)
     localStorage.setItem('expires_at', res.data.expires_at)
     localStorage.setItem('expires_seconds', res.data.expires_seconds)
