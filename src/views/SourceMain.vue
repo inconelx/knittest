@@ -6,6 +6,7 @@
           <!-- <el-menu-item index="/home">首页</el-menu-item> -->
           <!-- <el-menu-item index="/users">用户管理</el-menu-item> -->
           <el-menu-item index="/companies">公司管理</el-menu-item>
+          <el-menu-item index="/machine">机台管理</el-menu-item>
         </el-menu>
       </el-aside>
 

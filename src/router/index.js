@@ -4,6 +4,7 @@ import UserList from '@/views/UserList.vue'
 import Login from '@/views/Login.vue'
 import SourceMain from '@/views/SourceMain.vue'
 import CompanyList from '@/views/CompanyList.vue'
+import MachineList from '@/views/MachineList.vue'
 import EditCompany from '@/views/EditCompany.vue'
 import { initTokenRefresher, knit_api } from '@/utils/auth.js'
 import axios from 'axios'
@@ -17,7 +18,6 @@ const routes = [
     children: [
       { path: '', redirect: '/companies' }, // 默认显示
       { path: '/users', component: UserList },
-
       { path: '/companies', component: CompanyList },
       {
         path: '/companies/copy/:id',
@@ -37,6 +37,7 @@ const routes = [
         component: EditCompany,
         props: true,
       },
+      { path: '/machine', component: MachineList },
       // 其他子页面...
     ],
   },
