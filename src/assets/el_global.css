@@ -1,0 +1,70 @@
+.el-table__header th {
+  background-color: ghostwhite !important;
+}
+
+.el-input__wrapper {
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  background-color: transparent !important;
+}
+
+.el-input__inner {
+  padding: 0 !important;
+  font-size: 14px !important;
+  color: #606266 !important;
+}
+
+.el-button {
+  margin: 8px 16px 8px 0 !important;
+}
+
+.el-textarea__inner {
+  resize: none !important;
+}
+
+.el-textarea__inner {
+  resize: none !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: #999 transparent !important;
+}
+
+.el-textarea__inner::-webkit-scrollbar {
+  width: 12px !important;
+}
+
+.el-textarea__inner::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+.el-textarea__inner::-webkit-scrollbar-thumb {
+  background-color: #999 !important;
+  border-radius: 3px !important;
+  border: none !important;
+}
+
+/* 输入框、选择框、日期选择器统一边框 */
+.el-input__wrapper,
+.el-textarea__inner,
+.el-select .el-input__wrapper,
+.el-date-editor.el-input__wrapper {
+  border: 1px solid #dcdfe6 !important;
+  border-radius: 4px !important;
+  padding: 0 10px 0 10px !important;
+  box-shadow: none !important;
+}
+
+.el-textarea__inner {
+  border: 1px solid #dcdfe6 !important;
+  border-radius: 4px !important;
+  padding: 4px 10px 4px 10px !important;
+  box-shadow: none !important;
+}
+
+/* 聚焦时保持一致的边框高亮样式 */
+.el-input__wrapper.is-focus,
+.el-select .el-input.is-focus .el-input__wrapper,
+.el-date-editor.el-input__wrapper.is-focus {
+  border-color: #409eff !important;
+  box-shadow: none !important;
+}
