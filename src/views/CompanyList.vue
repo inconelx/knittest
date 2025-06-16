@@ -2,13 +2,13 @@
   <div class="p-4">
     <div class="mb-4 flex justify-between items-center">
       <el-button type="primary" @click="fetchCompanies">刷新</el-button>
-      <el-button type="primary" @click="goToAdd">新增公司</el-button>
+      <el-button type="primary" @click="openDialog('add')">新增公司</el-button>
       <el-button type="danger" :disabled="selectedIds.length === 0" @click="deleteSelected">
         删除勾选
       </el-button>
     </div>
 
-    <div class="mt-4 flex justify-end" style="margin: 8px 16px 8px 0">
+    <div class="mt-4 flex justify-end">
       <el-pagination
         background
         layout="prev, pager, next, total"
@@ -44,11 +44,12 @@
       <el-table-column prop="note" label="备注" />
       <el-table-column label="操作" width="200">
         <template #default="scope">
-          <el-button size="small" @click="editCompany(scope.row.company_id)">编辑</el-button>
-          <el-button size="small" @click="copyCompany(scope.row.company_id)">复制</el-button>
+          <el-button size="small" @click="openDialog('edit', scope.row.company_id)">编辑</el-button>
+          <el-button size="small" @click="openDialog('copy', scope.row.company_id)">复制</el-button>
         </template>
       </el-table-column>
     </el-table>
+    <CompanyDialog ref="dialogRef" @success="fetchCompanies" />
   </div>
 </template>
 
@@ -56,16 +57,17 @@
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import dayjs from 'dayjs'
-import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { knit_api } from '@/utils/auth.js'
 import utc from 'dayjs/plugin/utc'
+import CompanyDialog from './CompanyDialog.vue'
+
 dayjs.extend(utc)
 
-const router = useRouter()
 const loading = ref(false)
 const companyList = ref([])
 const selectedIds = ref([])
+const dialogRef = ref()
 
 const companyTypeMap = ref({})
 
@@ -107,6 +109,10 @@ const fetchCompanies = async () => {
   }
 }
 
+const openDialog = (action, id = null) => {
+  dialogRef.value.open(action, id)
+}
+
 const formatDate = (str) => {
   return str ? dayjs.utc(str).format('YYYY/MM/DD HH:mm:ss') : ''
   //   return str ? dayjs(str).format('YYYY/MM/DD HH:mm:ss [GMT+8]') : ''
@@ -123,18 +129,6 @@ const handlePageChange = (newPage) => {
 
 const handleSelectionChange = (selection) => {
   selectedIds.value = selection.map((item) => item.company_id)
-}
-
-const editCompany = (id) => {
-  router.push(`/companies/edit/${id}`)
-}
-
-const copyCompany = (id) => {
-  router.push(`/companies/copy/${id}`)
-}
-
-const goToAdd = () => {
-  router.push('/companies/add')
 }
 
 const deleteSelected = async () => {
