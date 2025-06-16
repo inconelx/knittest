@@ -1,8 +1,8 @@
 <template>
   <div class="p-4">
     <div class="mb-4 flex justify-between items-center">
-      <el-button type="primary" @click="fetchCompanies">刷新</el-button>
-      <!-- <el-button type="primary" @click="goToAdd">新增公司</el-button> -->
+      <el-button type="primary" @click="fetchGrid">刷新</el-button>
+      <el-button type="primary" @click="openDialog('add')">新增机台</el-button>
       <el-button type="danger" :disabled="selectedIds.length === 0" @click="deleteSelected">
         删除勾选
       </el-button>
@@ -21,7 +21,7 @@
 
     <el-table
       v-loading="loading"
-      :data="machineList"
+      :data="gridData"
       border
       style="width: 100%"
       @selection-change="handleSelectionChange"
@@ -43,11 +43,12 @@
       <el-table-column prop="note" label="备注" />
       <el-table-column label="操作" width="200">
         <template #default="scope">
-          <el-button size="small" @click="editMachine(scope.row.machine_id)">编辑</el-button>
-          <el-button size="small" @click="copyMachine(scope.row.machine_id)">复制</el-button>
+          <el-button size="small" @click="openDialog('edit', scope.row.company_id)">编辑</el-button>
+          <el-button size="small" @click="openDialog('copy', scope.row.company_id)">复制</el-button>
         </template>
       </el-table-column>
     </el-table>
+    <MachineDialog ref="dialogRef" @success="fetchGrid" />
   </div>
 </template>
 
@@ -59,12 +60,16 @@ import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { knit_api } from '@/utils/auth.js'
 import utc from 'dayjs/plugin/utc'
+import MachineDialog from './MachineDialog.vue'
+
+
 dayjs.extend(utc)
 
 const router = useRouter()
 const loading = ref(false)
-const machineList = ref([])
+const gridData = ref([])
 const selectedIds = ref([])
+const dialogRef = ref()
 
 const pagination = ref({
   page: 1,
@@ -72,7 +77,7 @@ const pagination = ref({
   total: 0,
 })
 
-const fetchCompanies = async () => {
+const fetchGrid = async () => {
   loading.value = true
   try {
     const res = await knit_api.post('/api/machine/query', {
@@ -80,7 +85,7 @@ const fetchCompanies = async () => {
       page_size: pagination.value.pageSize,
       filters: {}, // 可扩展
     })
-    machineList.value = res.data.records
+    gridData.value = res.data.records
     pagination.value.total = res.data.total
   } catch (err) {
     ElMessage.error('加载失败')
@@ -90,6 +95,10 @@ const fetchCompanies = async () => {
   }
 }
 
+const openDialog = (action, id = null) => {
+  dialogRef.value.open(action, id)
+}
+
 const formatDate = (str) => {
   return str ? dayjs.utc(str).format('YYYY/MM/DD HH:mm:ss') : ''
   //   return str ? dayjs(str).format('YYYY/MM/DD HH:mm:ss [GMT+8]') : ''
@@ -97,7 +106,7 @@ const formatDate = (str) => {
 
 const handlePageChange = (newPage) => {
   pagination.value.page = newPage
-  fetchCompanies()
+  fetchGrid()
 }
 
 const handleSelectionChange = (selection) => {
@@ -124,7 +133,7 @@ const deleteSelected = async () => {
     })
     ElMessage.success(res.data.message || '删除成功')
     selectedIds.value = []
-    fetchCompanies()
+    fetchGrid()
   } catch (err) {
     if (err !== 'cancel') {
       ElMessage.error(err.response?.data?.error || '删除失败')
@@ -133,7 +142,7 @@ const deleteSelected = async () => {
 }
 
 onMounted(() => {
-  fetchCompanies()
+  fetchGrid()
 })
 </script>
 

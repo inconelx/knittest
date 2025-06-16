@@ -1,7 +1,7 @@
 <template>
   <div class="p-4">
     <div class="mb-4 flex justify-between items-center">
-      <el-button type="primary" @click="fetchCompanies">刷新</el-button>
+      <el-button type="primary" @click="fetchGrid">刷新</el-button>
       <el-button type="primary" @click="openDialog('add')">新增公司</el-button>
       <el-button type="danger" :disabled="selectedIds.length === 0" @click="deleteSelected">
         删除勾选
@@ -21,7 +21,7 @@
 
     <el-table
       v-loading="loading"
-      :data="companyList"
+      :data="gridData"
       border
       style="width: 100%"
       @selection-change="handleSelectionChange"
@@ -49,7 +49,7 @@
         </template>
       </el-table-column>
     </el-table>
-    <CompanyDialog ref="dialogRef" @success="fetchCompanies" />
+    <CompanyDialog ref="dialogRef" @success="fetchGrid" />
   </div>
 </template>
 
@@ -65,7 +65,7 @@ import CompanyDialog from './CompanyDialog.vue'
 dayjs.extend(utc)
 
 const loading = ref(false)
-const companyList = ref([])
+const gridData = ref([])
 const selectedIds = ref([])
 const dialogRef = ref()
 
@@ -77,7 +77,7 @@ const pagination = ref({
   total: 0,
 })
 
-const fetchCompanies = async () => {
+const fetchGrid = async () => {
   loading.value = true
   try {
     const res = await knit_api.post('/api/company/query', {
@@ -85,7 +85,7 @@ const fetchCompanies = async () => {
       page_size: pagination.value.pageSize,
       filters: {}, // 可扩展
     })
-    companyList.value = res.data.records
+    gridData.value = res.data.records
     pagination.value.total = res.data.total
   } catch (err) {
     ElMessage.error('加载失败')
@@ -124,7 +124,7 @@ const formatCompanyType = (row) => {
 
 const handlePageChange = (newPage) => {
   pagination.value.page = newPage
-  fetchCompanies()
+  fetchGrid()
 }
 
 const handleSelectionChange = (selection) => {
@@ -143,7 +143,7 @@ const deleteSelected = async () => {
     })
     ElMessage.success(res.data.message || '删除成功')
     selectedIds.value = []
-    fetchCompanies()
+    fetchGrid()
   } catch (err) {
     if (err !== 'cancel') {
       ElMessage.error(err.response?.data?.error || '删除失败')
@@ -152,7 +152,7 @@ const deleteSelected = async () => {
 }
 
 onMounted(() => {
-  fetchCompanies()
+  fetchGrid()
 })
 </script>
 
