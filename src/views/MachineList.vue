@@ -7,7 +7,28 @@
         删除勾选
       </el-button>
     </div>
+    <div class="mt-4 flex justify-between items-center">
+      <el-form :inline="true" :model="searchForm">
+        <el-form-item label="机台号">
+          <el-input v-model="searchForm.filters.machine_name" />
+        </el-form-item>
 
+        <el-form-item label="录入时间">
+          <el-date-picker
+            v-model="searchForm.dateRange"
+            type="daterange"
+            range-separator="至"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            format="YYYY/MM/DD"
+            value-format="YYYY-MM-DD"
+          />
+        </el-form-item>
+        <el-form-item>
+          <el-button @click="resetSearch">重置</el-button>
+        </el-form-item>
+      </el-form>
+    </div>
     <div class="mt-4 flex justify-end" style="margin: 8px 16px 8px 0">
       <el-pagination
         background
@@ -43,8 +64,8 @@
       <el-table-column prop="note" label="备注" />
       <el-table-column label="操作" width="200">
         <template #default="scope">
-          <el-button size="small" @click="openDialog('edit', scope.row.company_id)">编辑</el-button>
-          <el-button size="small" @click="openDialog('copy', scope.row.company_id)">复制</el-button>
+          <el-button size="small" @click="openDialog('edit', scope.row.machine_id)">编辑</el-button>
+          <el-button size="small" @click="openDialog('copy', scope.row.machine_id)">复制</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -56,7 +77,6 @@
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import dayjs from 'dayjs'
-import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { knit_api } from '@/utils/auth.js'
 import utc from 'dayjs/plugin/utc'
@@ -65,7 +85,6 @@ import MachineDialog from './MachineDialog.vue'
 
 dayjs.extend(utc)
 
-const router = useRouter()
 const loading = ref(false)
 const gridData = ref([])
 const selectedIds = ref([])
@@ -77,13 +96,37 @@ const pagination = ref({
   total: 0,
 })
 
+const searchForm = ref({
+  filters: {
+    machine_name: null,
+  },
+  dateRange: [], // ['2025-06-01', '2025-06-18']
+})
+
+const fuzzyFields = new Set(['machine_name'])
+
 const fetchGrid = async () => {
   loading.value = true
+  const rawFilters = {}
+  const rawDateRange = {}
+
+  for (const key in searchForm.value.filters) {
+    const value = searchForm.value.filters[key]
+    if (value !== null && value !== undefined && value !== '') {
+      rawFilters[key] = fuzzyFields.has(key) ? `%${value}%` : value
+    }
+  }
+
+  const [begDate, endDate] = searchForm.value.dateRange || []
+  if (begDate) rawDateRange['beg_date'] = begDate
+  if (endDate) rawDateRange['end_date'] = endDate
+
   try {
     const res = await knit_api.post('/api/machine/query', {
       page: pagination.value.page,
       page_size: pagination.value.pageSize,
-      filters: {}, // 可扩展
+      filters: rawFilters,
+      date_range: rawDateRange,
     })
     gridData.value = res.data.records
     pagination.value.total = res.data.total
@@ -113,14 +156,6 @@ const handleSelectionChange = (selection) => {
   selectedIds.value = selection.map((item) => item.machine_id)
 }
 
-const editMachine = (id) => {
-  // router.push(`/companies/edit/${id}`)
-}
-
-const copyMachine = (id) => {
-  // router.push(`/companies/copy/${id}`)
-}
-
 const deleteSelected = async () => {
   try {
     await ElMessageBox.confirm('确定要删除选中的机台吗？', '提示', {
@@ -141,6 +176,13 @@ const deleteSelected = async () => {
   }
 }
 
+const resetSearch = () => {
+  for (const key in searchForm.value.filters) {
+    searchForm.value.filters[key] = ''
+  }
+  searchForm.value.dateRange = []
+}
+
 onMounted(() => {
   fetchGrid()
 })
@@ -149,5 +191,8 @@ onMounted(() => {
 <style scoped>
 .el-table {
   border: 1px solid #dcdfe6;
+}
+.el-form-item {
+  margin-bottom: 0px;
 }
 </style>

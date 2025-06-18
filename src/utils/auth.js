@@ -40,18 +40,18 @@ async function refreshToken() {
     localStorage.setItem('token', res.data.token)
     localStorage.setItem('expires_at', res.data.expires_at)
     localStorage.setItem('expires_seconds', res.data.expires_seconds)
+    localStorage.setItem('user_name', res.data.user_name)
 
     console.log('🔁 Token refreshed successfully.')
   } catch (error) {
     console.error('❌ Token refresh failed:', error)
     router.push('/login')
+    stopTokenRefresher()
   }
 }
 
 export function initTokenRefresher() {
-  if (refreshTimer) {
-    clearTimeout(refreshTimer)
-  }
+  stopTokenRefresher()
 
   const expiresSeconds = parseInt(localStorage.getItem('expires_seconds'))
   const expiresAt = parseInt(localStorage.getItem('expires_at'))

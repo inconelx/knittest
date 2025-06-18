@@ -8,6 +8,49 @@
       </el-button>
     </div>
 
+    <div class="mt-4 flex justify-between items-center">
+      <el-form :inline="true" :model="searchForm">
+        <el-form-item label="公司名称">
+          <el-input v-model="searchForm.filters.company_name" />
+        </el-form-item>
+
+        <el-form-item label="公司简称">
+          <el-input v-model="searchForm.filters.company_abbreviation" />
+        </el-form-item>
+
+        <el-form-item label="公司类型">
+          <el-select
+            v-model="searchForm.filters.company_type"
+            placeholder="请选择公司类型"
+            style="width: 150px"
+            clearable
+          >
+            <el-option
+              v-for="item in companyTypeOptions"
+              :key="item.table_field_value"
+              :label="item.table_field_label"
+              :value="item.table_field_value"
+            />
+          </el-select>
+        </el-form-item>
+
+        <el-form-item label="录入时间">
+          <el-date-picker
+            v-model="searchForm.dateRange"
+            type="daterange"
+            range-separator="至"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            format="YYYY/MM/DD"
+            value-format="YYYY-MM-DD"
+          />
+        </el-form-item>
+        <el-form-item>
+          <el-button @click="resetSearch">重置</el-button>
+        </el-form-item>
+      </el-form>
+    </div>
+
     <div class="mt-4 flex justify-end">
       <el-pagination
         background
@@ -70,6 +113,7 @@ const selectedIds = ref([])
 const dialogRef = ref()
 
 const companyTypeMap = ref({})
+const companyTypeOptions = ref([])
 
 const pagination = ref({
   page: 1,
@@ -77,13 +121,39 @@ const pagination = ref({
   total: 0,
 })
 
+const searchForm = ref({
+  filters: {
+    company_name: null,
+    company_type: null,
+    company_abbreviation: null,
+  },
+  dateRange: [], // ['2025-06-01', '2025-06-18']
+})
+
+const fuzzyFields = new Set(['company_name', 'company_abbreviation'])
+
 const fetchGrid = async () => {
   loading.value = true
+  const rawFilters = {}
+  const rawDateRange = {}
+
+  for (const key in searchForm.value.filters) {
+    const value = searchForm.value.filters[key]
+    if (value !== null && value !== undefined && value !== '') {
+      rawFilters[key] = fuzzyFields.has(key) ? `%${value}%` : value
+    }
+  }
+
+  const [begDate, endDate] = searchForm.value.dateRange || []
+  if (begDate) rawDateRange['beg_date'] = begDate
+  if (endDate) rawDateRange['end_date'] = endDate
+
   try {
     const res = await knit_api.post('/api/company/query', {
       page: pagination.value.page,
       page_size: pagination.value.pageSize,
-      filters: {}, // 可扩展
+      filters: rawFilters,
+      date_range: rawDateRange,
     })
     gridData.value = res.data.records
     pagination.value.total = res.data.total
@@ -101,6 +171,7 @@ const fetchGrid = async () => {
         table_field_name: 'company_type',
       },
     })
+    companyTypeOptions.value = res.data
     companyTypeMap.value = Object.fromEntries(
       res.data.map((item) => [item.table_field_value, item.table_field_label]),
     )
@@ -151,6 +222,13 @@ const deleteSelected = async () => {
   }
 }
 
+const resetSearch = () => {
+  for (const key in searchForm.value.filters) {
+    searchForm.value.filters[key] = ''
+  }
+  searchForm.value.dateRange = []
+}
+
 onMounted(() => {
   fetchGrid()
 })
@@ -159,5 +237,8 @@ onMounted(() => {
 <style scoped>
 .el-table {
   border: 1px solid #dcdfe6;
+}
+.el-form-item {
+  margin-bottom: 0px;
 }
 </style>

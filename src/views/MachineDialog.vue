@@ -19,7 +19,7 @@
       <el-button @click="visible = false">取消</el-button>
       <el-button
         type="primary"
-        @click="handleSubmit"
+        @click="handleSubmit":disabled="saveDisabled"
         >保存</el-button
       >
     </template>
@@ -27,7 +27,7 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref } from 'vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
 import { knit_api } from '@/utils/auth.js'
@@ -35,9 +35,10 @@ import { knit_api } from '@/utils/auth.js'
 const visible = ref(false)
 const mode = ref('add') // 'add' | 'edit' | 'copy'
 const recordId = ref(null)
+const saveDisabled = ref(true)
 
 const formRef = ref()
-const form = reactive({
+const form = ref({
   machine_name: '',
   note: '',
 })
@@ -55,20 +56,20 @@ const titleMap = {
 }
 
 const resetForm = () => {
-  Object.assign(form, {
-    machine_name: '',
-    note: '',
-  })
+  for (const key in form.value) {
+    form.value[key] = null
+  }
 }
 
 const open = async (action, id = null) => {
   mode.value = action
   recordId.value = id
   visible.value = true
+  saveDisabled.value = true
 
   if (action === 'add') {
     resetForm()
-  } else if (id) {
+  } else if (id && (action === 'copy' || action === 'edit')) {
     const res = await knit_api.post('/api/machine/query', {
       page: 1,
       page_size: 1,
@@ -76,10 +77,9 @@ const open = async (action, id = null) => {
         machine_id: id,
       },
     })
-    // Object.assign(form, res.data.records[0])
-    Object.keys(form).forEach((key) => {
+    Object.keys(form.value).forEach((key) => {
       if (Object.prototype.hasOwnProperty.call(res.data.records[0], key)) {
-        form[key] = res.data.records[0][key]
+        form.value[key] = res.data.records[0][key]
       }
     })
     if (action === 'copy') {
@@ -87,6 +87,7 @@ const open = async (action, id = null) => {
       recordId.value = null
     }
   }
+  saveDisabled.value = false
 }
 
 const handleSubmit = () => {
@@ -97,7 +98,7 @@ const handleSubmit = () => {
         await knit_api.post('/api/generic/insert', {
           table_name: 'knit_machine',
           pk_name: 'machine_id',
-          json_data: form,
+          json_data: form.value,
         })
         ElMessage.success('新增成功')
       } else if (mode.value === 'edit') {
@@ -105,7 +106,7 @@ const handleSubmit = () => {
           table_name: 'knit_machine',
           pk_name: 'machine_id',
           pk_value: recordId.value,
-          json_data: form,
+          json_data: form.value,
         })
         ElMessage.success('更新成功')
       }

@@ -6,7 +6,7 @@ import SourceMain from '@/views/SourceMain.vue'
 import CompanyList from '@/views/CompanyList.vue'
 import MachineList from '@/views/MachineList.vue'
 import EditCompany from '@/views/EditCompany.vue'
-import { initTokenRefresher, knit_api } from '@/utils/auth.js'
+import { initTokenRefresher, knit_api, stopTokenRefresher } from '@/utils/auth.js'
 import axios from 'axios'
 
 const routes = [
@@ -19,25 +19,25 @@ const routes = [
       { path: '', redirect: '/companies' }, // 默认显示
       { path: '/users', component: UserList },
       { path: '/companies', component: CompanyList },
-      {
-        path: '/companies/copy/:id',
-        name: 'CopyCompany',
-        component: EditCompany,
-        props: true,
-      },
-      {
-        path: '/companies/add',
-        name: 'AddCompany',
-        component: EditCompany,
-        props: true,
-      },
-      {
-        path: '/companies/edit/:id',
-        name: 'EditCompany',
-        component: EditCompany,
-        props: true,
-      },
-      { path: '/machine', component: MachineList },
+      // {
+      //   path: '/companies/copy/:id',
+      //   name: 'CopyCompany',
+      //   component: EditCompany,
+      //   props: true,
+      // },
+      // {
+      //   path: '/companies/add',
+      //   name: 'AddCompany',
+      //   component: EditCompany,
+      //   props: true,
+      // },
+      // {
+      //   path: '/companies/edit/:id',
+      //   name: 'EditCompany',
+      //   component: EditCompany,
+      //   props: true,
+      // },
+      { path: '/machines', component: MachineList },
       // 其他子页面...
     ],
   },
@@ -55,13 +55,17 @@ router.beforeEach(async (to, from, next) => {
     if (!token) return next('/login')
     try {
       const res = await knit_api.get('/api/check-login')
-      if (res.data.logged_in){
+      if (res.data.logged_in) {
         initTokenRefresher()
         next()
-      } 
-      else next('/login')
+      }
+      else {
+        next('/login')
+        stopTokenRefresher()
+      }
     } catch {
       next('/login')
+      stopTokenRefresher()
     }
   } else {
     next()

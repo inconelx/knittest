@@ -8,6 +8,4 @@ import { initTokenRefresher } from '@/utils/auth.js'
 import { createApp } from 'vue'
 import App from './App.vue'
 
-// localStorage.removeItem('token')
-
 createApp(App).use(router).use(ElementPlus).mount('#app')
