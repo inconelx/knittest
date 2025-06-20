@@ -2,28 +2,29 @@
   <div class="p-4">
     <div class="mb-4 flex justify-between items-center">
       <el-button type="primary" @click="fetchGrid">刷新</el-button>
-      <el-button type="primary" @click="openDialog('add')">新增机台</el-button>
+      <el-button type="primary" @click="openDialog('add')">新增计划单</el-button>
       <el-button type="primary" @click="resetSearch">重置筛选</el-button>
       <el-button type="danger" :disabled="selectedIds.length === 0" @click="deleteSelected">
         删除勾选
       </el-button>
     </div>
+
     <div class="mt-4 flex justify-between items-center">
       <el-form :inline="true" :model="searchForm">
-        <el-form-item label="机台号">
-          <el-input v-model="searchForm.filters.machine_name" style="width: 160px" />
-        </el-form-item>
-
-        <el-form-item label="生产计划单号">
+        <el-form-item label="计划单号">
           <el-input v-model="searchForm.filters.order_no" style="width: 160px" />
         </el-form-item>
-
-        <el-form-item label="生产产品名称">
+        <el-form-item label="产品名称">
           <el-input v-model="searchForm.filters.order_cloth_name" style="width: 160px" />
         </el-form-item>
-
-        <el-form-item label="生产产品颜色">
+        <el-form-item label="产品颜色">
           <el-input v-model="searchForm.filters.order_cloth_color" style="width: 160px" />
+        </el-form-item>
+        <el-form-item label="公司名称">
+          <el-input v-model="searchForm.filters.company_name" style="width: 160px" />
+        </el-form-item>
+        <el-form-item label="公司简称">
+          <el-input v-model="searchForm.filters.company_abbreviation" style="width: 160px" />
         </el-form-item>
 
         <el-form-item label="录入时间">
@@ -39,7 +40,8 @@
         </el-form-item>
       </el-form>
     </div>
-    <div class="mt-4 flex justify-end" style="margin: 8px 16px 8px 0">
+
+    <div class="mt-4 flex justify-end">
       <el-pagination
         background
         layout="prev, pager, next, total"
@@ -59,17 +61,22 @@
       scrollbar-always
     >
       <el-table-column type="selection" width="40" />
-      <el-table-column prop="machine_id" label="ID" width="160" />
+      <el-table-column prop="order_id" label="ID" width="160" />
       <el-table-column label="操作" width="160">
         <template #default="scope">
-          <el-button size="small" @click="openDialog('edit', scope.row.machine_id)">编辑</el-button>
-          <el-button size="small" @click="openDialog('copy', scope.row.machine_id)">复制</el-button>
+          <el-button size="small" @click="openDialog('edit', scope.row.order_id)">编辑</el-button>
+          <el-button size="small" @click="openDialog('copy', scope.row.order_id)">复制</el-button>
         </template>
       </el-table-column>
-      <el-table-column prop="machine_name" label="机台号" width="160" />
-      <el-table-column prop="order_no" label="生产计划单号" width="160" />
-      <el-table-column prop="order_cloth_name" label="生产产品名称" width="160" />
-      <el-table-column prop="order_cloth_color" label="生产产品颜色" width="160" />
+      <el-table-column prop="order_no" label="计划单号" width="160" />
+      <el-table-column prop="order_cloth_name" label="产品名称" width="160" />
+      <el-table-column prop="order_cloth_color" label="产品颜色" width="160" />
+      <el-table-column prop="order_cloth_piece" label="计划匹数" width="160" />
+      <el-table-column prop="order_cloth_weight" label="计划总重量" width="160" />
+      <el-table-column prop="order_cloth_add" label="空加" width="160" />
+      <el-table-column prop="order_cloth_weight_price" label="产品单价" width="160" />
+      <el-table-column prop="company_name" label="客户名称" width="160" />
+      <el-table-column prop="company_abbreviation" label="客户简称" width="160" />
       <el-table-column prop="add_time" label="录入时间" width="160">
         <template #default="{ row }">
           {{ formatDate(row.add_time) }}
@@ -82,7 +89,7 @@
       </el-table-column>
       <el-table-column prop="note" label="备注" width="320" />
     </el-table>
-    <MachineDialog ref="dialogRef" @success="fetchGrid" />
+    <OrderDialog ref="dialogRef" @success="fetchGrid" />
   </div>
 </template>
 
@@ -93,7 +100,7 @@ import dayjs from 'dayjs'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { knit_api } from '@/utils/auth.js'
 import utc from 'dayjs/plugin/utc'
-import MachineDialog from './MachineDialog.vue'
+import OrderDialog from './OrderDialog.vue'
 
 dayjs.extend(utc)
 
@@ -110,15 +117,22 @@ const pagination = ref({
 
 const searchForm = ref({
   filters: {
-    machine_name: null,
     order_no: null,
     order_cloth_name: null,
     order_cloth_color: null,
+    company_name: null,
+    company_abbreviation: null,
   },
   dateRange: [], // ['2025-06-01', '2025-06-18']
 })
 
-const fuzzyFields = new Set(['machine_name', 'order_no', 'order_cloth_name', 'order_cloth_color'])
+const fuzzyFields = new Set([
+  'order_no',
+  'order_cloth_name',
+  'order_cloth_color',
+  'company_name',
+  'company_abbreviation',
+])
 
 const fetchGrid = async () => {
   loading.value = true
@@ -137,7 +151,7 @@ const fetchGrid = async () => {
   if (endDate) rawDateRange['end_date'] = endDate
 
   try {
-    const res = await knit_api.post('/api/machine/query', {
+    const res = await knit_api.post('/api/order/query', {
       page: pagination.value.page,
       page_size: pagination.value.pageSize,
       filters: rawFilters,
@@ -168,17 +182,17 @@ const handlePageChange = (newPage) => {
 }
 
 const handleSelectionChange = (selection) => {
-  selectedIds.value = selection.map((item) => item.machine_id)
+  selectedIds.value = selection.map((item) => item.order_id)
 }
 
 const deleteSelected = async () => {
   try {
-    await ElMessageBox.confirm('确定要删除选中的机台吗？', '提示', {
+    await ElMessageBox.confirm('确定要删除选中的计划单吗？', '提示', {
       type: 'warning',
     })
     const res = await knit_api.post('/api/generic/delete', {
-      table_name: 'knit_machine',
-      pk_name: 'machine_id',
+      table_name: 'knit_order',
+      pk_name: 'order_id',
       pk_values: selectedIds.value,
     })
     ElMessage.success(res.data.message || '删除成功')

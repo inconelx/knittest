@@ -5,6 +5,7 @@
         <el-menu default-active="$route.path" router>
           <el-menu-item index="/companies">公司管理</el-menu-item>
           <el-menu-item index="/machines">机台管理</el-menu-item>
+          <el-menu-item index="/orders">计划单管理</el-menu-item>
         </el-menu>
       </el-aside>
 
@@ -27,6 +28,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { stopTokenRefresher } from '@/utils/auth.js'
+import { ElMessage, ElMessageBox } from 'element-plus'
 
 const userName = ref('')
 const router = useRouter()
@@ -40,7 +42,11 @@ onMounted(() => {
 })
 
 // 退出登录逻辑
-const logout = () => {
+const logout = async () => {
+  await ElMessageBox.confirm('确定要退出登录吗？', '提示', {
+    type: 'warning',
+  })
+  localStorage.removeItem('token')
   router.push('/login')
   stopTokenRefresher()
 }

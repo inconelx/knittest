@@ -23,9 +23,10 @@ knit_api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      console.warn('⛔ 登录状态失效，跳转登录页')
+      // console.warn('⛔ 登录状态失效，跳转登录页')
       localStorage.clear()
       router.push('/login')
+      stopTokenRefresher()
     }
     return Promise.reject(error)
   },
@@ -42,9 +43,9 @@ async function refreshToken() {
     localStorage.setItem('expires_seconds', res.data.expires_seconds)
     localStorage.setItem('user_name', res.data.user_name)
 
-    console.log('🔁 Token refreshed successfully.')
+    // console.log('🔁 Token refreshed successfully.')
   } catch (error) {
-    console.error('❌ Token refresh failed:', error)
+    // console.error('❌ Token refresh failed:', error)
     router.push('/login')
     stopTokenRefresher()
   }
@@ -58,7 +59,7 @@ export function initTokenRefresher() {
   const token = localStorage.getItem('token')
 
   if (!expiresSeconds || !token) {
-    console.warn('⚠️ Cannot start token refresher: missing token or expiration.')
+    // console.warn('⚠️ Cannot start token refresher: missing token or expiration.')
     return
   }
 
@@ -76,13 +77,13 @@ export function initTokenRefresher() {
     refreshToken()
   }, refreshInterval * 1000)
 
-  console.log('✅ Token refresher started.')
+  // console.log('✅ Token refresher started.')
 }
 
 export function stopTokenRefresher() {
   if (refreshTimer) {
     clearInterval(refreshTimer)
     refreshTimer = null
-    console.log('⏹️ Token refresher stopped.')
+    // console.log('⏹️ Token refresher stopped.')
   }
 }

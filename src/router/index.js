@@ -5,6 +5,7 @@ import Login from '@/views/Login.vue'
 import SourceMain from '@/views/SourceMain.vue'
 import CompanyList from '@/views/CompanyList.vue'
 import MachineList from '@/views/MachineList.vue'
+import OrderList from '@/views/OrderList.vue'
 import EditCompany from '@/views/EditCompany.vue'
 import { initTokenRefresher, knit_api, stopTokenRefresher } from '@/utils/auth.js'
 import axios from 'axios'
@@ -19,6 +20,7 @@ const routes = [
       { path: '', redirect: '/companies' }, // 默认显示
       { path: '/users', component: UserList },
       { path: '/companies', component: CompanyList },
+      { path: '/orders', component: OrderList },
       // {
       //   path: '/companies/copy/:id',
       //   name: 'CopyCompany',

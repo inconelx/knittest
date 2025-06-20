@@ -32,12 +32,7 @@
 
     <template #footer>
       <el-button @click="visible = false">取消</el-button>
-      <el-button
-        type="primary"
-        @click="handleSubmit"
-        :disabled="saveDisabled"
-        >保存</el-button
-      >
+      <el-button type="primary" @click="handleSubmit" :disabled="saveDisabled">保存</el-button>
     </template>
   </el-dialog>
 </template>
@@ -55,16 +50,17 @@ const recordId = ref(null)
 
 const formRef = ref()
 const form = ref({
-  company_name: '',
+  company_name: null,
   company_type: null,
-  company_abbreviation: '',
-  note: '',
+  company_abbreviation: null,
+  note: null,
 })
 const emit = defineEmits(['success'])
 
 const rules = {
   company_name: [{ required: true, message: '请输入公司名称', trigger: 'blur' }],
-  company_type: [{ required: true, message: '请选择公司类型', trigger: 'change' }],
+  company_type: [{ required: true, message: '请选择公司类型', trigger: 'blur' }],
+  company_abbreviation: [{ required: true, message: '请输入公司简称', trigger: 'blur' }],
 }
 
 const titleMap = {
@@ -123,11 +119,21 @@ const handleSubmit = () => {
   formRef.value.validate(async (valid) => {
     if (!valid) return
     try {
+      const input_values = {}
+      for (const key in form.value) {
+        const value = form.value[key]
+        if (value !== null && value !== undefined && value !== '') {
+          input_values[key] = value
+        }
+        else {
+          input_values[key] = null
+        }
+      }
       if (mode.value === 'add' || mode.value === 'copy') {
         await knit_api.post('/api/generic/insert', {
           table_name: 'knit_company',
           pk_name: 'company_id',
-          json_data: form.value,
+          json_data: input_values,
         })
         ElMessage.success('新增成功')
       } else if (mode.value === 'edit') {
@@ -135,7 +141,7 @@ const handleSubmit = () => {
           table_name: 'knit_company',
           pk_name: 'company_id',
           pk_value: recordId.value,
-          json_data: form.value,
+          json_data: input_values,
         })
         ElMessage.success('更新成功')
       }

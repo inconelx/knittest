@@ -3,6 +3,7 @@
     <div class="mb-4 flex justify-between items-center">
       <el-button type="primary" @click="fetchGrid">刷新</el-button>
       <el-button type="primary" @click="openDialog('add')">新增公司</el-button>
+      <el-button type="primary" @click="resetSearch">重置筛选</el-button>
       <el-button type="danger" :disabled="selectedIds.length === 0" @click="deleteSelected">
         删除勾选
       </el-button>
@@ -11,18 +12,18 @@
     <div class="mt-4 flex justify-between items-center">
       <el-form :inline="true" :model="searchForm">
         <el-form-item label="公司名称">
-          <el-input v-model="searchForm.filters.company_name" />
+          <el-input v-model="searchForm.filters.company_name" style="width: 160px" />
         </el-form-item>
 
         <el-form-item label="公司简称">
-          <el-input v-model="searchForm.filters.company_abbreviation" />
+          <el-input v-model="searchForm.filters.company_abbreviation" style="width: 160px" />
         </el-form-item>
 
         <el-form-item label="公司类型">
           <el-select
             v-model="searchForm.filters.company_type"
             placeholder="请选择公司类型"
-            style="width: 150px"
+            style="width: 160px"
             clearable
           >
             <el-option
@@ -45,9 +46,6 @@
             value-format="YYYY-MM-DD"
           />
         </el-form-item>
-        <el-form-item>
-          <el-button @click="resetSearch">重置</el-button>
-        </el-form-item>
       </el-form>
     </div>
 
@@ -68,29 +66,35 @@
       border
       style="width: 100%"
       @selection-change="handleSelectionChange"
+      scrollbar-always
     >
       <el-table-column type="selection" width="40" />
       <el-table-column prop="company_id" label="ID" width="160" />
-      <el-table-column prop="company_name" label="公司名称" />
-      <el-table-column prop="company_type" label="公司类型" :formatter="formatCompanyType" />
-      <el-table-column prop="add_time" label="录入时间">
-        <template #default="{ row }">
-          {{ formatDate(row.add_time) }}
-        </template>
-      </el-table-column>
-      <el-table-column prop="edit_time" label="最后修改时间">
-        <template #default="{ row }">
-          {{ formatDate(row.edit_time) }}
-        </template>
-      </el-table-column>
-      <el-table-column prop="company_abbreviation" label="简称" />
-      <el-table-column prop="note" label="备注" />
-      <el-table-column label="操作" width="200">
+      <el-table-column label="操作" width="160">
         <template #default="scope">
           <el-button size="small" @click="openDialog('edit', scope.row.company_id)">编辑</el-button>
           <el-button size="small" @click="openDialog('copy', scope.row.company_id)">复制</el-button>
         </template>
       </el-table-column>
+      <el-table-column prop="company_name" label="公司名称" width="160" />
+      <el-table-column prop="company_abbreviation" label="简称" width="160" />
+      <el-table-column
+        prop="company_type"
+        label="公司类型"
+        :formatter="formatCompanyType"
+        width="160"
+      />
+      <el-table-column prop="add_time" label="录入时间" width="160">
+        <template #default="{ row }">
+          {{ formatDate(row.add_time) }}
+        </template>
+      </el-table-column>
+      <el-table-column prop="edit_time" label="最后修改时间" width="160">
+        <template #default="{ row }">
+          {{ formatDate(row.edit_time) }}
+        </template>
+      </el-table-column>
+      <el-table-column prop="note" label="备注" width="320" />
     </el-table>
     <CompanyDialog ref="dialogRef" @success="fetchGrid" />
   </div>
@@ -227,6 +231,7 @@ const resetSearch = () => {
     searchForm.value.filters[key] = ''
   }
   searchForm.value.dateRange = []
+  fetchGrid()
 }
 
 onMounted(() => {
@@ -237,8 +242,5 @@ onMounted(() => {
 <style scoped>
 .el-table {
   border: 1px solid #dcdfe6;
-}
-.el-form-item {
-  margin-bottom: 0px;
 }
 </style>
