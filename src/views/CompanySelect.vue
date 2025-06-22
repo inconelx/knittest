@@ -5,7 +5,7 @@
       <el-button type="primary" @click="resetSearch">重置筛选</el-button>
       <el-button @click="visible = false">取消</el-button>
     </div>
-    <div class="mt-4 flex justify-between items-center">
+    <div class="mt-4 flex justify-between items-center" label-width="auto">
       <el-form :inline="true" :model="searchForm">
         <el-form-item label="公司名称">
           <el-input v-model="searchForm.filters.company_name" style="width: 160px" />
@@ -33,7 +33,7 @@
 
         <el-form-item label="录入时间">
           <el-date-picker
-            v-model="searchForm.dateRange"
+            v-model="searchForm.date_ranges.add_time"
             type="daterange"
             range-separator="至"
             start-placeholder="开始日期"
@@ -102,7 +102,9 @@ const searchForm = ref({
     company_type: null,
     company_abbreviation: null,
   },
-  dateRange: [], // ['2025-06-01', '2025-06-18']
+  date_ranges: {
+    add_time:[]
+  },
 })
 
 const fuzzyFields = new Set(['company_name', 'company_abbreviation'])
@@ -125,26 +127,12 @@ const fetchGrid = async () => {
 
   await fetchCompanyType()
 
-  const rawFilters = {}
-  const rawDateRange = {}
-
-  for (const key in searchForm.value.filters) {
-    const value = searchForm.value.filters[key]
-    if (value !== null && value !== undefined && value !== '') {
-      rawFilters[key] = fuzzyFields.has(key) ? `%${value}%` : value
-    }
-  }
-
-  const [begDate, endDate] = searchForm.value.dateRange || []
-  if (begDate) rawDateRange['beg_date'] = begDate
-  if (endDate) rawDateRange['end_date'] = endDate
-
   try {
     const res = await knit_api.post('/api/company/query', {
       page: pagination.value.page,
       page_size: pagination.value.pageSize,
       filters: rawFilters,
-      date_range: rawDateRange,
+      date_ranges: searchForm.value.date_ranges,
     })
     gridData.value = res.data.records
     pagination.value.total = res.data.total
@@ -191,7 +179,9 @@ const resetSearch = () => {
   for (const key in searchForm.value.filters) {
     searchForm.value.filters[key] = null
   }
-  searchForm.value.dateRange = []
+  for (const key in searchForm.value.date_ranges) {
+    searchForm.value.date_ranges[key] = []
+  }
   fetchGrid()
 }
 

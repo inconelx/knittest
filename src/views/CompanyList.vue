@@ -10,7 +10,7 @@
     </div>
 
     <div class="mt-4 flex justify-between items-center">
-      <el-form :inline="true" :model="searchForm">
+      <el-form :inline="true" :model="searchForm" label-width="auto">
         <el-form-item label="公司名称">
           <el-input v-model="searchForm.filters.company_name" style="width: 160px" />
         </el-form-item>
@@ -132,7 +132,7 @@ const searchForm = ref({
     company_abbreviation: null,
   },
   date_ranges: {
-    add_time:[]
+    add_time: [],
   },
 })
 

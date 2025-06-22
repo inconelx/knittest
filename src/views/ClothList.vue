@@ -12,7 +12,7 @@
       </el-button>
     </div>
     <div class="mt-4 flex justify-between items-center">
-      <el-form :inline="true" :model="searchForm">
+      <el-form :inline="true" :model="searchForm" label-width="auto">
         <el-form-item label="机台号">
           <el-input v-model="searchForm.filters.machine_name" style="width: 160px" />
         </el-form-item>
@@ -31,7 +31,7 @@
 
         <el-form-item label="录入时间">
           <el-date-picker
-            v-model="searchForm.dateRange"
+            v-model="searchForm.date_ranges.add_time"
             type="daterange"
             range-separator="至"
             start-placeholder="开始日期"
@@ -63,7 +63,7 @@
 
         <el-form-item label="出货时间">
           <el-date-picker
-            v-model="searchForm.deliveryDateRange"
+            v-model="searchForm.date_ranges.delivery_time"
             type="daterange"
             range-separator="至"
             start-placeholder="开始日期"
@@ -169,8 +169,10 @@ const searchForm = ref({
     delivery_status: null,
     delivery_no: null,
   },
-  dateRange: [], // ['2025-06-01', '2025-06-18']
-  deliveryDateRange: [],
+  date_ranges: {
+    add_time: [],
+    delivery_time: []
+  },
 })
 const fuzzyFields = new Set(['machine_name', 'order_no', 'order_cloth_name', 'order_cloth_color', 'delivery_no'])
 
@@ -203,7 +205,6 @@ const handleDialogSetOrder = async (submitId) => {
 const fetchGrid = async () => {
   loading.value = true
   const rawFilters = {}
-  const rawDateRange = {}
 
   for (const key in searchForm.value.filters) {
     const value = searchForm.value.filters[key]
@@ -212,21 +213,18 @@ const fetchGrid = async () => {
     }
   }
 
-  const [begDate, endDate] = searchForm.value.dateRange || []
-  if (begDate) rawDateRange['beg_date'] = begDate
-  if (endDate) rawDateRange['end_date'] = endDate
-
   try {
-    const res = await knit_api.post('/api/machine/query', {
+    const res = await knit_api.post('/api/cloth/query', {
       page: pagination.value.page,
       page_size: pagination.value.pageSize,
       filters: rawFilters,
-      date_range: rawDateRange,
+      date_range: searchForm.value.date_ranges,
     })
     gridData.value = res.data.records
     pagination.value.total = res.data.total
   } catch (err) {
-    ElMessage.error('加载失败')
+    // ElMessage.error('加载失败')
+    ElMessage.error('保存失败：' + (err.response?.data?.error || err.message))
     // console.error(err)
   } finally {
     loading.value = false
@@ -283,7 +281,9 @@ const resetSearch = () => {
   for (const key in searchForm.value.filters) {
     searchForm.value.filters[key] = null
   }
-  searchForm.value.dateRange = []
+  for (const key in searchForm.value.date_ranges) {
+    searchForm.value.date_ranges[key] = []
+  }
   fetchGrid()
 }
 
