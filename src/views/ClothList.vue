@@ -171,10 +171,16 @@ const searchForm = ref({
   },
   date_ranges: {
     add_time: [],
-    delivery_time: []
+    delivery_time: [],
   },
 })
-const fuzzyFields = new Set(['machine_name', 'order_no', 'order_cloth_name', 'order_cloth_color', 'delivery_no'])
+const fuzzyFields = new Set([
+  'machine_name',
+  'order_no',
+  'order_cloth_name',
+  'order_cloth_color',
+  'delivery_no',
+])
 
 const deliveryStatusMap = ref({ 0: '未出货', 1: '已出货' })
 const deliveryStatusOptions = ref([
