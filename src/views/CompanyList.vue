@@ -168,13 +168,13 @@ const fetchGrid = async () => {
       rawFilters[key] = fuzzyFields.has(key) ? `%${value}%` : value
     }
   }
-  
+
   try {
     const res = await knit_api.post('/api/company/query', {
       page: pagination.value.page,
       page_size: pagination.value.pageSize,
       filters: rawFilters,
-      date_range: searchForm.value.date_ranges,
+      date_ranges: searchForm.value.date_ranges,
     })
     gridData.value = res.data.records
     pagination.value.total = res.data.total
