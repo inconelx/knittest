@@ -57,10 +57,10 @@ const logout = async () => {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  padding: 0 20px;
   border-bottom: 1px solid #dcdfe6;
 }
 .el-menu-item {
+  margin: 4px;
   border: 1px solid #dcdfe6;
 }
 .top-bar-content {

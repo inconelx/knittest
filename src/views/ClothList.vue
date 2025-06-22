@@ -2,7 +2,7 @@
   <div class="p-4">
     <div class="mb-4 flex justify-between items-center">
       <el-button type="primary" @click="fetchGrid">刷新</el-button>
-      <el-button type="primary" @click="openDialog('add')">新增机台</el-button>
+      <el-button type="primary" @click="openDialog('add')">新增布匹</el-button>
       <el-button type="primary" @click="resetSearch">重置筛选</el-button>
       <el-button type="primary" :disabled="selectedIds.length === 0" @click="openOrderSelect">
         设置计划单
@@ -17,21 +17,53 @@
           <el-input v-model="searchForm.filters.machine_name" style="width: 160px" />
         </el-form-item>
 
-        <el-form-item label="生产计划单号">
+        <el-form-item label="计划单号">
           <el-input v-model="searchForm.filters.order_no" style="width: 160px" />
         </el-form-item>
 
-        <el-form-item label="生产产品名称">
+        <el-form-item label="产品名称">
           <el-input v-model="searchForm.filters.order_cloth_name" style="width: 160px" />
         </el-form-item>
 
-        <el-form-item label="生产产品颜色">
+        <el-form-item label="产品颜色">
           <el-input v-model="searchForm.filters.order_cloth_color" style="width: 160px" />
         </el-form-item>
 
         <el-form-item label="录入时间">
           <el-date-picker
             v-model="searchForm.dateRange"
+            type="daterange"
+            range-separator="至"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            format="YYYY/MM/DD"
+            value-format="YYYY-MM-DD"
+          />
+        </el-form-item>
+
+        <el-form-item label="出货状态">
+          <el-select
+            v-model="searchForm.filters.delivery_status"
+            placeholder="请选择出货状态"
+            style="width: 160px"
+            clearable
+          >
+            <el-option
+              v-for="item in deliveryStatusOptions"
+              :key="item.statusValue"
+              :label="item.statusLabel"
+              :value="item.statusValue"
+            />
+          </el-select>
+        </el-form-item>
+
+        <el-form-item label="出货单号">
+          <el-input v-model="searchForm.filters.delivery_no" style="width: 160px" />
+        </el-form-item>
+
+        <el-form-item label="出货时间">
+          <el-date-picker
+            v-model="searchForm.deliveryDateRange"
             type="daterange"
             range-separator="至"
             start-placeholder="开始日期"
@@ -62,22 +94,36 @@
       scrollbar-always
     >
       <el-table-column type="selection" width="40" />
-      <el-table-column prop="machine_id" label="ID" width="160" />
+      <el-table-column prop="cloth_id" label="ID" width="160" />
       <el-table-column label="操作" width="160">
         <template #default="scope">
-          <el-button size="small" @click="openDialog('edit', scope.row.machine_id)">编辑</el-button>
-          <el-button size="small" @click="openDialog('copy', scope.row.machine_id)">复制</el-button>
+          <el-button size="small" @click="openDialog('edit', scope.row.cloth_id)">编辑</el-button>
+          <el-button size="small" @click="openDialog('copy', scope.row.cloth_id)">复制</el-button>
         </template>
       </el-table-column>
       <el-table-column prop="machine_name" label="机台号" width="160" />
-      <el-table-column prop="order_no" label="生产计划单号" width="160" />
-      <el-table-column prop="order_cloth_name" label="生产产品名称" width="160" />
-      <el-table-column prop="order_cloth_color" label="生产产品颜色" width="160" />
+      <el-table-column prop="cloth_calculate_weight" label="计算重量" width="160" />
+      <el-table-column
+        prop="delivery_status"
+        label="出货状态"
+        :formatter="formatdeliveryStatus"
+        width="160"
+      />
+      <el-table-column prop="delivery_no" label="出货单号" width="160" />
+      <el-table-column prop="delivery_time" label="出货时间" width="160" />
+      <el-table-column prop="add_user_name" label="录入账户" width="160" />
       <el-table-column prop="add_time" label="录入时间" width="160">
         <template #default="{ row }">
           {{ formatDate(row.add_time) }}
         </template>
       </el-table-column>
+      <el-table-column prop="order_no" label="产品计划单号" width="160" />
+      <el-table-column prop="order_cloth_name" label="产品名称" width="160" />
+      <el-table-column prop="order_cloth_color" label="产品颜色" width="160" />
+      <el-table-column prop="cloth_origin_weight" label="原始重量" width="160" />
+      <el-table-column prop="cloth_weight_correct" label="重量修正" width="160" />
+      <el-table-column prop="order_cloth_add" label="空加" width="160" />
+
       <el-table-column prop="edit_time" label="最后修改时间" width="160">
         <template #default="{ row }">
           {{ formatDate(row.edit_time) }}
@@ -120,11 +166,19 @@ const searchForm = ref({
     order_no: null,
     order_cloth_name: null,
     order_cloth_color: null,
+    delivery_status: null,
+    delivery_no: null,
   },
   dateRange: [], // ['2025-06-01', '2025-06-18']
+  deliveryDateRange: [],
 })
+const fuzzyFields = new Set(['machine_name', 'order_no', 'order_cloth_name', 'order_cloth_color', 'delivery_no'])
 
-const fuzzyFields = new Set(['machine_name', 'order_no', 'order_cloth_name', 'order_cloth_color'])
+const deliveryStatusMap = ref({ 0: '未出货', 1: '已出货' })
+const deliveryStatusOptions = ref([
+  { statusValue: 0, statusLabel: '未出货' },
+  { statusValue: 1, statusLabel: '已出货' },
+])
 
 const handleDialogSetOrder = async (submitId) => {
   try {
@@ -190,6 +244,10 @@ const openOrderSelect = () => {
 const formatDate = (str) => {
   return str ? dayjs.utc(str).format('YYYY/MM/DD HH:mm:ss') : ''
   //   return str ? dayjs(str).format('YYYY/MM/DD HH:mm:ss [GMT+8]') : ''
+}
+
+const formatdeliveryStatus = (row) => {
+  return deliveryStatusMap.value[row.delivery_status] || row.delivery_status || '-'
 }
 
 const handlePageChange = (newPage) => {

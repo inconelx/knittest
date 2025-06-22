@@ -1,17 +1,10 @@
 <template>
-  <div class="p-4">
+  <el-dialog v-model="visible" :title="titleName" width="50%" :close-on-click-modal="false">
     <div class="mb-4 flex justify-between items-center">
       <el-button type="primary" @click="fetchGrid">刷新</el-button>
-      <el-button type="primary" @click="openDialog('add')">新增计划单</el-button>
       <el-button type="primary" @click="resetSearch">重置筛选</el-button>
-      <el-button type="primary" :disabled="selectedIds.length === 0" @click="openCompanySelect">
-        设置公司
-      </el-button>
-      <el-button type="danger" :disabled="selectedIds.length === 0" @click="deleteSelected">
-        删除勾选
-      </el-button>
+      <el-button @click="visible = false">取消</el-button>
     </div>
-
     <div class="mt-4 flex justify-between items-center">
       <el-form :inline="true" :model="searchForm">
         <el-form-item label="计划单号">
@@ -60,15 +53,12 @@
       :data="gridData"
       border
       style="width: 100%"
-      @selection-change="handleSelectionChange"
       scrollbar-always
     >
-      <el-table-column type="selection" width="40" />
       <el-table-column prop="order_id" label="ID" width="160" />
-      <el-table-column label="操作" width="160">
+      <el-table-column label="操作" width="80">
         <template #default="scope">
-          <el-button size="small" @click="openDialog('edit', scope.row.order_id)">编辑</el-button>
-          <el-button size="small" @click="openDialog('copy', scope.row.order_id)">复制</el-button>
+          <el-button size="small" @click="handleSubmit(scope.row.order_id)">选取</el-button>
         </template>
       </el-table-column>
       <el-table-column prop="order_no" label="计划单号" width="160" />
@@ -78,48 +68,31 @@
       <el-table-column prop="company_abbreviation" label="客户简称" width="160" />
       <el-table-column prop="order_cloth_piece" label="计划匹数" width="160" />
       <el-table-column prop="order_cloth_weight" label="计划总重量" width="160" />
-      <el-table-column prop="order_cloth_add" label="空加" width="160" />
       <el-table-column prop="order_cloth_weight_price" label="产品单价" width="160" />
       <el-table-column prop="add_time" label="录入时间" width="160">
         <template #default="{ row }">
           {{ formatDate(row.add_time) }}
         </template>
       </el-table-column>
-      <el-table-column prop="edit_time" label="最后修改时间" width="160">
-        <template #default="{ row }">
-          {{ formatDate(row.edit_time) }}
-        </template>
-      </el-table-column>
       <el-table-column prop="note" label="备注" width="320" />
     </el-table>
-    <OrderDialog ref="dialogRef" @success="fetchGrid" />
-    <CompanySelect ref="companySelectRef" @success="handleDialogSetCompany" />
-  </div>
+  </el-dialog>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import axios from 'axios'
 import dayjs from 'dayjs'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import { knit_api } from '@/utils/auth.js'
 import utc from 'dayjs/plugin/utc'
-import OrderDialog from './OrderDialog.vue'
-import CompanySelect from './CompanySelect.vue'
 
 dayjs.extend(utc)
 
 const loading = ref(false)
 const gridData = ref([])
-const selectedIds = ref([])
-const dialogRef = ref()
-const companySelectRef = ref()
 
-const pagination = ref({
-  page: 1,
-  pageSize: 10,
-  total: 0,
-})
+const visible = ref(false)
 
 const searchForm = ref({
   filters: {
@@ -140,28 +113,19 @@ const fuzzyFields = new Set([
   'company_abbreviation',
 ])
 
-const handleDialogSetCompany = async (submitId) => {
-  try {
-    const res = await knit_api.post('/api/generic/update_batch', {
-      table_name: 'knit_order',
-      pk_name: 'order_id',
-      pk_values: selectedIds.value,
-      json_data: {
-        order_custom_company_id: submitId,
-      },
-    })
-    ElMessage.success(res.data.message || '设置成功')
-    selectedIds.value = []
-    fetchGrid()
-  } catch (err) {
-    if (err !== 'cancel') {
-      ElMessage.error(err.response?.data?.error || '设置失败')
-    }
-  }
-}
+const pagination = ref({
+  page: 1,
+  pageSize: 10,
+  total: 0,
+})
+
+const emit = defineEmits(['success'])
+
+const titleName = '计划单选取'
 
 const fetchGrid = async () => {
   loading.value = true
+
   const rawFilters = {}
   const rawDateRange = {}
 
@@ -193,46 +157,14 @@ const fetchGrid = async () => {
   }
 }
 
-const openDialog = (action, id = null) => {
-  dialogRef.value.open(action, id)
-}
-
-const openCompanySelect = () => {
-  companySelectRef.value.open()
-}
-
-const formatDate = (str) => {
-  return str ? dayjs.utc(str).format('YYYY/MM/DD HH:mm:ss') : ''
-  //   return str ? dayjs(str).format('YYYY/MM/DD HH:mm:ss [GMT+8]') : ''
-}
-
 const handlePageChange = (newPage) => {
   pagination.value.page = newPage
   fetchGrid()
 }
 
-const handleSelectionChange = (selection) => {
-  selectedIds.value = selection.map((item) => item.order_id)
-}
-
-const deleteSelected = async () => {
-  try {
-    await ElMessageBox.confirm('确定要删除选中的计划单吗？', '提示', {
-      type: 'warning',
-    })
-    const res = await knit_api.post('/api/generic/delete', {
-      table_name: 'knit_order',
-      pk_name: 'order_id',
-      pk_values: selectedIds.value,
-    })
-    ElMessage.success(res.data.message || '删除成功')
-    selectedIds.value = []
-    fetchGrid()
-  } catch (err) {
-    if (err !== 'cancel') {
-      ElMessage.error(err.response?.data?.error || '删除失败')
-    }
-  }
+const formatDate = (str) => {
+  return str ? dayjs.utc(str).format('YYYY/MM/DD HH:mm:ss') : ''
+  //   return str ? dayjs(str).format('YYYY/MM/DD HH:mm:ss [GMT+8]') : ''
 }
 
 const resetSearch = () => {
@@ -243,13 +175,19 @@ const resetSearch = () => {
   fetchGrid()
 }
 
-onMounted(() => {
+const open = async () => {
+  visible.value = true
   fetchGrid()
-})
-</script>
-
-<style scoped>
-.el-table {
-  border: 1px solid #dcdfe6;
 }
-</style>
+
+const handleSubmit = (selectId) => {
+  try {
+    visible.value = false
+    emit('success', selectId) // 通知父组件刷新列表等
+  } catch (err) {
+    ElMessage.error('保存失败：' + (err.response?.data?.error || err.message))
+  }
+}
+
+defineExpose({ open })
+</script>
