@@ -1,5 +1,5 @@
 <template>
-  <el-dialog v-model="visible" :title="titleMap[mode]" width="33%" :close-on-click-modal="false">
+  <el-dialog v-model="visible" :title="titleMap[mode]" width="25%" :close-on-click-modal="false">
     <el-form :model="form" :rules="rules" ref="formRef" label-width="auto">
       <el-form-item label="计划单号" prop="order_no">
         <el-input v-model="form.order_no" maxlength="60" />
@@ -9,6 +9,26 @@
       </el-form-item>
       <el-form-item label="产品颜色" prop="order_cloth_color">
         <el-input v-model="form.order_cloth_color" maxlength="60" />
+      </el-form-item>
+      <el-form-item label="公司简称" prop="order_custom_company_id">
+        <el-select
+          v-model="form.order_custom_company_id"
+          filterable
+          remote
+          reserve-keyword
+          clearable
+          placeholder="输入以搜索公司简称"
+          :remote-method="remoteSearchCompany"
+          :loading="companyLoading"
+          maxlength="60"
+        >
+          <el-option
+            v-for="item in companyOptions"
+            :key="item.company_id"
+            :label="item.company_abbreviation"
+            :value="item.company_id"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item label="计划匹数" prop="order_cloth_piece">
         <DecimalInput
@@ -70,6 +90,8 @@ const visible = ref(false)
 const saveDisabled = ref(true)
 const mode = ref('add') // 'add' | 'edit' | 'copy'
 const recordId = ref(null)
+const companyLoading = ref(false)
+const companyOptions = ref([])
 
 const formRef = ref()
 const form = ref({
@@ -80,6 +102,7 @@ const form = ref({
   order_cloth_weight: null,
   order_cloth_weight_price: null,
   order_cloth_add: null,
+  order_custom_company_id: null,
   note: null,
 })
 const emit = defineEmits(['success'])
@@ -100,6 +123,26 @@ const resetForm = () => {
   }
 }
 
+const remoteSearchCompany = async (query) => {
+  if (query === null || query === undefined) {
+    companyOptions.value = []
+    return
+  }
+  companyLoading.value = true
+  try {
+    const res = await knit_api.post('/api/company/search', {
+      size: 10,
+      keyword: query,
+    })
+    companyOptions.value = res.data
+  } catch (error) {
+    console.error('搜索失败', error)
+    companyOptions.value = []
+  } finally {
+    companyLoading.value = false
+  }
+}
+
 const open = async (action, id = null) => {
   if (formRef.value) {
     formRef.value.clearValidate()
@@ -108,6 +151,7 @@ const open = async (action, id = null) => {
   recordId.value = id
   visible.value = true
   saveDisabled.value = true
+  companyOptions.value = []
 
   if (action === 'add') {
     resetForm()
@@ -119,6 +163,14 @@ const open = async (action, id = null) => {
         order_id: id,
       },
     })
+    if (res.data.records[0]['order_custom_company_id']) {
+      companyOptions.value = [
+        {
+          company_id: res.data.records[0]['order_custom_company_id'],
+          company_abbreviation: res.data.records[0]['company_abbreviation'],
+        },
+      ]
+    }
     Object.keys(form.value).forEach((key) => {
       if (Object.prototype.hasOwnProperty.call(res.data.records[0], key)) {
         form.value[key] = res.data.records[0][key]

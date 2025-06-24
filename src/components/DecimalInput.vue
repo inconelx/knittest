@@ -1,5 +1,5 @@
 <template>
-  <el-input v-bind="$attrs" v-model="internalValue" @blur="handleBlur" @input="handleInput" />
+  <el-input v-bind="$attrs" v-model="internalValue" @blur="handleBlur" @input="handleInput" maxlength="16" />
 </template>
 
 <script setup>

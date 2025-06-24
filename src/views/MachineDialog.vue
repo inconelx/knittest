@@ -1,5 +1,5 @@
 <template>
-  <el-dialog v-model="visible" :title="titleMap[mode]" width="33%" :close-on-click-modal="false">
+  <el-dialog v-model="visible" :title="titleMap[mode]" width="25%" :close-on-click-modal="false">
     <el-form :model="form" :rules="rules" ref="formRef" label-width="auto">
       <el-form-item label="机台号" prop="machine_name">
         <el-input v-model="form.machine_name" maxlength="60" />

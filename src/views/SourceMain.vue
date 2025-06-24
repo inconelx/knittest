@@ -7,7 +7,7 @@
           <el-menu-item index="/machines">机台管理</el-menu-item>
           <el-menu-item index="/orders">计划单管理</el-menu-item>
           <el-menu-item index="/clothes">布匹管理</el-menu-item>
-          <el-menu-item>出货单管理</el-menu-item>
+          <!-- <el-menu-item>出货单管理</el-menu-item> -->
         </el-menu>
       </el-aside>
 

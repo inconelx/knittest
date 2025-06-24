@@ -1,6 +1,6 @@
 // utils/auth.js
 import axios from 'axios'
-import { useRouter } from 'vue-router'
+import router from '@/router/index.js'
 
 //针织api
 export const knit_api = axios.create({
@@ -32,7 +32,6 @@ knit_api.interceptors.response.use(
   },
 )
 
-const router = useRouter()
 let refreshTimer = null // 全局唯一计时器引用
 
 async function refreshToken() {

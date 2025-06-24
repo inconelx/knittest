@@ -1,5 +1,5 @@
 <template>
-  <el-dialog v-model="visible" :title="titleMap[mode]" width="33%" :close-on-click-modal="false">
+  <el-dialog v-model="visible" :title="titleMap[mode]" width="25%" :close-on-click-modal="false">
     <el-form :model="form" :rules="rules" ref="formRef" label-width="auto">
       <el-form-item label="公司名称" prop="company_name">
         <el-input v-model="form.company_name" maxlength="60" />

@@ -60,7 +60,7 @@
       <el-table-column prop="company_id" label="ID" width="160" />
       <el-table-column label="操作" width="80">
         <template #default="scope">
-          <el-button size="small" @click="handleSubmit(scope.row.company_id, scope.row.company_name)">选取</el-button>
+          <el-button size="small" @click="handleSubmit(scope.row.company_id, scope.row.company_abbreviation)">选取</el-button>
         </template>
       </el-table-column>
        <el-table-column prop="company_name" label="公司名称" width="160" />

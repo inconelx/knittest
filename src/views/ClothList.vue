@@ -64,8 +64,8 @@
           </el-select>
         </el-form-item>
 
-        <el-form-item label="出货单号">
-          <el-input v-model="searchForm.filters.delivery_no" style="width: 160px" />
+        <el-form-item label="出货单ID">
+          <el-input v-model="searchForm.filters.cloth_delivery_id" style="width: 160px" />
         </el-form-item>
 
         <el-form-item label="出货时间">
@@ -125,7 +125,7 @@
       <el-table-column prop="order_no" label="产品计划单号" width="160" />
       <el-table-column prop="order_cloth_name" label="产品名称" width="160" />
       <el-table-column prop="order_cloth_color" label="产品颜色" width="160" />
-      <el-table-column prop="delivery_no" label="出货单号" width="160" />
+      <el-table-column prop="cloth_delivery_id" label="出货单ID" width="160" />
       <el-table-column prop="delivery_time" label="出货时间" width="160" />
       <el-table-column prop="cloth_origin_weight" label="原始重量" width="160" />
       <el-table-column prop="cloth_weight_correct" label="重量修正" width="160" />
@@ -177,7 +177,7 @@ const searchForm = ref({
     order_cloth_name: null,
     order_cloth_color: null,
     delivery_status: null,
-    delivery_no: null,
+    cloth_delivery_id: null,
     add_user_name: null,
   },
   date_ranges: {
@@ -190,7 +190,7 @@ const fuzzyFields = new Set([
   'order_no',
   'order_cloth_name',
   'order_cloth_color',
-  'delivery_no',
+  'cloth_delivery_id',
 ])
 
 const deliveryStatusMap = ref({ 0: '未出货', 1: '已出货' })

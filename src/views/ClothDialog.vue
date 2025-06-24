@@ -1,5 +1,5 @@
 <template>
-  <el-dialog v-model="visible" :title="titleMap[mode]" width="33%" :close-on-click-modal="false">
+  <el-dialog v-model="visible" :title="titleMap[mode]" width="25%" :close-on-click-modal="false">
     <el-form :model="form" :rules="rules" ref="formRef" label-width="auto">
       <el-form-item label="机台号" prop="cloth_machine_id">
         <el-select
@@ -13,6 +13,7 @@
           @change="handleMachineChange"
           :loading="machineLoading"
           :disabled="mode != 'add'"
+          maxlength="60"
         >
           <el-option
             v-for="item in machineOptions"
@@ -52,6 +53,7 @@
           placeholder="输入以搜索计划单号"
           :remote-method="remoteSearchOrder"
           :loading="orderLoading"
+          maxlength="60"
         >
           <el-option
             v-for="item in orderOptions"

@@ -65,7 +65,6 @@ router.beforeEach(async (to, from, next) => {
       else {
         stopTokenRefresher()
         next('/login')
-        
       }
     } catch {
       stopTokenRefresher()
