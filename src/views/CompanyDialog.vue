@@ -85,6 +85,9 @@ const resetForm = () => {
 }
 
 const open = async (action, id = null) => {
+  if (formRef.value) {
+    formRef.value.clearValidate()
+  }
   mode.value = action
   recordId.value = id
   visible.value = true

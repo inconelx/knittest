@@ -6,7 +6,6 @@ import SourceMain from '@/views/SourceMain.vue'
 import CompanyList from '@/views/CompanyList.vue'
 import MachineList from '@/views/MachineList.vue'
 import OrderList from '@/views/OrderList.vue'
-import EditCompany from '@/views/EditCompany.vue'
 import ClothList from '@/views/ClothList.vue'
 import { initTokenRefresher, knit_api, stopTokenRefresher } from '@/utils/auth.js'
 import axios from 'axios'
@@ -64,12 +63,13 @@ router.beforeEach(async (to, from, next) => {
         next()
       }
       else {
-        next('/login')
         stopTokenRefresher()
+        next('/login')
+        
       }
     } catch {
-      next('/login')
       stopTokenRefresher()
+      next('/login')
     }
   } else {
     next()

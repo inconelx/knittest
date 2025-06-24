@@ -5,7 +5,10 @@
       <el-button type="primary" @click="openDialog('add')">新增布匹</el-button>
       <el-button type="primary" @click="resetSearch">重置筛选</el-button>
       <el-button type="primary" :disabled="selectedIds.length === 0" @click="openOrderSelect">
-        设置计划单
+        勾选设置计划单
+      </el-button>
+      <el-button type="primary" :disabled="selectedIds.length === 0" @click="openCorrectAddInput">
+        勾选设置重量修正
       </el-button>
       <el-button type="danger" :disabled="selectedIds.length === 0" @click="deleteSelected">
         删除勾选
@@ -15,6 +18,10 @@
       <el-form :inline="true" :model="searchForm" label-width="auto">
         <el-form-item label="机台号">
           <el-input v-model="searchForm.filters.machine_name" style="width: 160px" />
+        </el-form-item>
+
+        <el-form-item label="录入账号">
+          <el-input v-model="searchForm.filters.add_user_name" style="width: 160px" />
         </el-form-item>
 
         <el-form-item label="计划单号">
@@ -95,13 +102,19 @@
     >
       <el-table-column type="selection" width="40" />
       <el-table-column prop="cloth_id" label="ID" width="160" />
-      <el-table-column label="操作" width="160">
+      <el-table-column label="操作" width="80">
         <template #default="scope">
           <el-button size="small" @click="openDialog('edit', scope.row.cloth_id)">编辑</el-button>
-          <el-button size="small" @click="openDialog('copy', scope.row.cloth_id)">复制</el-button>
+          <!-- <el-button size="small" @click="openDialog('copy', scope.row.cloth_id)">复制</el-button> -->
         </template>
       </el-table-column>
       <el-table-column prop="machine_name" label="机台号" width="160" />
+      <el-table-column prop="add_user_name" label="录入账号" width="160" />
+      <el-table-column prop="add_time" label="录入时间" width="160">
+        <template #default="{ row }">
+          {{ formatDate(row.add_time) }}
+        </template>
+      </el-table-column>
       <el-table-column prop="cloth_calculate_weight" label="计算重量" width="160" />
       <el-table-column
         prop="delivery_status"
@@ -109,17 +122,11 @@
         :formatter="formatdeliveryStatus"
         width="160"
       />
-      <el-table-column prop="delivery_no" label="出货单号" width="160" />
-      <el-table-column prop="delivery_time" label="出货时间" width="160" />
-      <el-table-column prop="add_user_name" label="录入账户" width="160" />
-      <el-table-column prop="add_time" label="录入时间" width="160">
-        <template #default="{ row }">
-          {{ formatDate(row.add_time) }}
-        </template>
-      </el-table-column>
       <el-table-column prop="order_no" label="产品计划单号" width="160" />
       <el-table-column prop="order_cloth_name" label="产品名称" width="160" />
       <el-table-column prop="order_cloth_color" label="产品颜色" width="160" />
+      <el-table-column prop="delivery_no" label="出货单号" width="160" />
+      <el-table-column prop="delivery_time" label="出货时间" width="160" />
       <el-table-column prop="cloth_origin_weight" label="原始重量" width="160" />
       <el-table-column prop="cloth_weight_correct" label="重量修正" width="160" />
       <el-table-column prop="order_cloth_add" label="空加" width="160" />
@@ -131,8 +138,9 @@
       </el-table-column>
       <el-table-column prop="note" label="备注" width="320" />
     </el-table>
-    <MachineDialog ref="dialogRef" @success="fetchGrid" />
+    <ClothDialog ref="dialogRef" @success="fetchGrid" />
     <OrderSelect ref="orderSelectRef" @success="handleDialogSetOrder" />
+    <DecimalDialog ref="correctDialogRef" :title="'重量修正设置'" @success="weightCorrectSet" />
   </div>
 </template>
 
@@ -143,8 +151,9 @@ import dayjs from 'dayjs'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { knit_api } from '@/utils/auth.js'
 import utc from 'dayjs/plugin/utc'
-import MachineDialog from './MachineDialog.vue'
+import ClothDialog from './ClothDialog.vue'
 import OrderSelect from './OrderSelect.vue'
+import DecimalDialog from '@/components/DecimalDialog.vue'
 
 dayjs.extend(utc)
 
@@ -152,6 +161,7 @@ const loading = ref(false)
 const gridData = ref([])
 const selectedIds = ref([])
 const dialogRef = ref()
+const correctDialogRef = ref()
 const orderSelectRef = ref()
 
 const pagination = ref({
@@ -168,6 +178,7 @@ const searchForm = ref({
     order_cloth_color: null,
     delivery_status: null,
     delivery_no: null,
+    add_user_name: null,
   },
   date_ranges: {
     add_time: [],
@@ -188,14 +199,17 @@ const deliveryStatusOptions = ref([
   { statusValue: 1, statusLabel: '已出货' },
 ])
 
-const handleDialogSetOrder = async (submitId) => {
+const handleDialogSetOrder = async (submit_id, submit_label) => {
   try {
+    await ElMessageBox.confirm('确定要设置关联计划单为 ' + submit_label + ' 吗？', '提示', {
+      type: 'warning',
+    })
     const res = await knit_api.post('/api/generic/update_batch', {
-      table_name: 'knit_machine',
-      pk_name: 'machine_id',
+      table_name: 'knit_cloth',
+      pk_name: 'cloth_id',
       pk_values: selectedIds.value,
       json_data: {
-        machine_order_id: submitId,
+        cloth_order_id: submit_id,
       },
     })
     ElMessage.success(res.data.message || '设置成功')
@@ -203,7 +217,30 @@ const handleDialogSetOrder = async (submitId) => {
     fetchGrid()
   } catch (err) {
     if (err !== 'cancel') {
-      ElMessage.error(err.response?.data?.error || '设置公司失败')
+      ElMessage.error(err.response?.data?.error || '设置失败')
+    }
+  }
+}
+
+const weightCorrectSet = async (submit_num) => {
+  try {
+    await ElMessageBox.confirm('确定要设置重量修正为 ' + submit_num + ' 吗？', '提示', {
+      type: 'warning',
+    })
+    const res = await knit_api.post('/api/generic/update_batch', {
+      table_name: 'knit_cloth',
+      pk_name: 'cloth_id',
+      pk_values: selectedIds.value,
+      json_data: {
+        cloth_weight_correct: submit_num,
+      },
+    })
+    ElMessage.success(res.data.message || '设置成功')
+    selectedIds.value = []
+    fetchGrid()
+  } catch (err) {
+    if (err !== 'cancel') {
+      ElMessage.error(err.response?.data?.error || '设置失败')
     }
   }
 }
@@ -245,6 +282,10 @@ const openOrderSelect = () => {
   orderSelectRef.value.open()
 }
 
+const openCorrectAddInput = () => {
+  correctDialogRef.value.open()
+}
+
 const formatDate = (str) => {
   return str ? dayjs.utc(str).format('YYYY/MM/DD HH:mm:ss') : ''
   //   return str ? dayjs(str).format('YYYY/MM/DD HH:mm:ss [GMT+8]') : ''
@@ -260,7 +301,7 @@ const handlePageChange = (newPage) => {
 }
 
 const handleSelectionChange = (selection) => {
-  selectedIds.value = selection.map((item) => item.machine_id)
+  selectedIds.value = selection.map((item) => item.cloth_id)
 }
 
 const deleteSelected = async () => {
@@ -269,8 +310,8 @@ const deleteSelected = async () => {
       type: 'warning',
     })
     const res = await knit_api.post('/api/generic/delete', {
-      table_name: 'knit_machine',
-      pk_name: 'machine_id',
+      table_name: 'knit_cloth',
+      pk_name: 'cloth_id',
       pk_values: selectedIds.value,
     })
     ElMessage.success(res.data.message || '删除成功')

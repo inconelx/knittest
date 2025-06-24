@@ -5,7 +5,10 @@
       <el-button type="primary" @click="openDialog('add')">新增计划单</el-button>
       <el-button type="primary" @click="resetSearch">重置筛选</el-button>
       <el-button type="primary" :disabled="selectedIds.length === 0" @click="openCompanySelect">
-        设置公司
+        勾选设置公司
+      </el-button>
+      <el-button type="primary" :disabled="selectedIds.length === 0" @click="openWeightAddInput">
+        勾选设置空加
       </el-button>
       <el-button type="danger" :disabled="selectedIds.length === 0" @click="deleteSelected">
         删除勾选
@@ -94,6 +97,7 @@
     </el-table>
     <OrderDialog ref="dialogRef" @success="fetchGrid" />
     <CompanySelect ref="companySelectRef" @success="handleDialogSetCompany" />
+    <DecimalDialog ref="addDialogRef" :title="'空加设置'" @success="weightAddSet" />
   </div>
 </template>
 
@@ -106,6 +110,7 @@ import { knit_api } from '@/utils/auth.js'
 import utc from 'dayjs/plugin/utc'
 import OrderDialog from './OrderDialog.vue'
 import CompanySelect from './CompanySelect.vue'
+import DecimalDialog from '@/components/DecimalDialog.vue'
 
 dayjs.extend(utc)
 
@@ -113,6 +118,7 @@ const loading = ref(false)
 const gridData = ref([])
 const selectedIds = ref([])
 const dialogRef = ref()
+const addDialogRef = ref()
 const companySelectRef = ref()
 
 const pagination = ref({
@@ -142,14 +148,40 @@ const fuzzyFields = new Set([
   'company_abbreviation',
 ])
 
-const handleDialogSetCompany = async (submitId) => {
+const handleDialogSetCompany = async (submit_id, submit_label) => {
   try {
+    await ElMessageBox.confirm('确定要设置关联公司为 ' + submit_label + ' 吗？', '提示', {
+      type: 'warning',
+    })
     const res = await knit_api.post('/api/generic/update_batch', {
       table_name: 'knit_order',
       pk_name: 'order_id',
       pk_values: selectedIds.value,
       json_data: {
-        order_custom_company_id: submitId,
+        order_custom_company_id: submit_id,
+      },
+    })
+    ElMessage.success(res.data.message || '设置成功')
+    selectedIds.value = []
+    fetchGrid()
+  } catch (err) {
+    if (err !== 'cancel') {
+      ElMessage.error(err.response?.data?.error || '设置失败')
+    }
+  }
+}
+
+const weightAddSet = async (submit_num) => {
+  try {
+    await ElMessageBox.confirm('确定要设置空加为 ' + submit_num + ' 吗？', '提示', {
+      type: 'warning',
+    })
+    const res = await knit_api.post('/api/generic/update_batch', {
+      table_name: 'knit_order',
+      pk_name: 'order_id',
+      pk_values: selectedIds.value,
+      json_data: {
+        order_cloth_add: submit_num,
       },
     })
     ElMessage.success(res.data.message || '设置成功')
@@ -196,6 +228,10 @@ const openDialog = (action, id = null) => {
 
 const openCompanySelect = () => {
   companySelectRef.value.open()
+}
+
+const openWeightAddInput = () => {
+  addDialogRef.value.open()
 }
 
 const formatDate = (str) => {

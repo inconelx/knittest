@@ -25,8 +25,8 @@ knit_api.interceptors.response.use(
     if (error.response && error.response.status === 401) {
       // console.warn('⛔ 登录状态失效，跳转登录页')
       localStorage.clear()
-      router.push('/login')
       stopTokenRefresher()
+      router.push('/login')
     }
     return Promise.reject(error)
   },
@@ -46,8 +46,8 @@ async function refreshToken() {
     // console.log('🔁 Token refreshed successfully.')
   } catch (error) {
     // console.error('❌ Token refresh failed:', error)
-    router.push('/login')
     stopTokenRefresher()
+    router.push('/login')
   }
 }
 

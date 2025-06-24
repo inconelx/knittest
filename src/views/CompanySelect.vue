@@ -60,7 +60,7 @@
       <el-table-column prop="company_id" label="ID" width="160" />
       <el-table-column label="操作" width="80">
         <template #default="scope">
-          <el-button size="small" @click="handleSubmit(scope.row.company_id)">选取</el-button>
+          <el-button size="small" @click="handleSubmit(scope.row.company_id, scope.row.company_name)">选取</el-button>
         </template>
       </el-table-column>
        <el-table-column prop="company_name" label="公司名称" width="160" />
@@ -127,6 +127,15 @@ const fetchGrid = async () => {
 
   await fetchCompanyType()
 
+  const rawFilters = {}
+
+  for (const key in searchForm.value.filters) {
+    const value = searchForm.value.filters[key]
+    if (value !== null && value !== undefined && value !== '') {
+      rawFilters[key] = fuzzyFields.has(key) ? `%${value}%` : value
+    }
+  }
+
   try {
     const res = await knit_api.post('/api/company/query', {
       page: pagination.value.page,
@@ -190,12 +199,12 @@ const open = async () => {
   fetchGrid()
 }
 
-const handleSubmit = (selectId) => {
+const handleSubmit = (select_id, select_label) => {
   try {
     visible.value = false
-    emit('success', selectId) // 通知父组件刷新列表等
+    emit('success', select_id, select_label) // 通知父组件刷新列表等
   } catch (err) {
-    ElMessage.error('保存失败：' + (err.response?.data?.error || err.message))
+    ElMessage.error('获取失败：' + (err.response?.data?.error || err.message))
   }
 }
 

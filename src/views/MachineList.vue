@@ -5,7 +5,7 @@
       <el-button type="primary" @click="openDialog('add')">新增机台</el-button>
       <el-button type="primary" @click="resetSearch">重置筛选</el-button>
       <el-button type="primary" :disabled="selectedIds.length === 0" @click="openOrderSelect">
-        设置计划单
+        勾选设置计划单
       </el-button>
       <el-button type="danger" :disabled="selectedIds.length === 0" @click="deleteSelected">
         删除勾选
@@ -128,14 +128,17 @@ const searchForm = ref({
 
 const fuzzyFields = new Set(['machine_name', 'order_no', 'order_cloth_name', 'order_cloth_color'])
 
-const handleDialogSetOrder = async (submitId) => {
+const handleDialogSetOrder = async (submit_id, submit_label) => {
   try {
+    await ElMessageBox.confirm('确定要设置关联计划单为 ' + submit_label + ' 吗？', '提示', {
+      type: 'warning',
+    })
     const res = await knit_api.post('/api/generic/update_batch', {
       table_name: 'knit_machine',
       pk_name: 'machine_id',
       pk_values: selectedIds.value,
       json_data: {
-        machine_order_id: submitId,
+        machine_order_id: submit_id,
       },
     })
     ElMessage.success(res.data.message || '设置成功')
@@ -143,7 +146,7 @@ const handleDialogSetOrder = async (submitId) => {
     fetchGrid()
   } catch (err) {
     if (err !== 'cancel') {
-      ElMessage.error(err.response?.data?.error || '设置公司失败')
+      ElMessage.error(err.response?.data?.error || '设置失败')
     }
   }
 }

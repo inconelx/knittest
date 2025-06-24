@@ -1,7 +1,7 @@
 <template>
   <el-dialog v-model="visible" :title="titleMap[mode]" width="33%" :close-on-click-modal="false">
     <el-form :model="form" :rules="rules" ref="formRef" label-width="auto">
-      <el-form-item label="机台名称" prop="machine_name">
+      <el-form-item label="机台号" prop="machine_name">
         <el-input v-model="form.machine_name" maxlength="60" />
       </el-form-item>
       
@@ -62,6 +62,9 @@ const resetForm = () => {
 }
 
 const open = async (action, id = null) => {
+  if (formRef.value) {
+    formRef.value.clearValidate()
+  }
   mode.value = action
   recordId.value = id
   visible.value = true
