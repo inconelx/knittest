@@ -16,6 +16,10 @@
     </div>
     <div class="mt-4 flex justify-between items-center">
       <el-form :inline="true" :model="searchForm" label-width="auto">
+        <el-form-item label="布匹ID">
+          <el-input v-model="searchForm.filters.cloth_id" style="width: 160px" />
+        </el-form-item>
+
         <el-form-item label="机台号">
           <el-input v-model="searchForm.filters.machine_name" style="width: 160px" />
         </el-form-item>
@@ -172,6 +176,7 @@ const pagination = ref({
 
 const searchForm = ref({
   filters: {
+    cloth_id: null,
     machine_name: null,
     order_no: null,
     order_cloth_name: null,
@@ -180,23 +185,24 @@ const searchForm = ref({
     cloth_delivery_id: null,
     add_user_name: null,
   },
+  fuzzy_fields: {
+    cloth_id: null,
+    machine_name: null,
+    order_no: null,
+    order_cloth_name: null,
+    order_cloth_color: null,
+    cloth_delivery_id: null,
+  },
   date_ranges: {
     add_time: [],
     delivery_time: [],
   },
 })
-const fuzzyFields = new Set([
-  'machine_name',
-  'order_no',
-  'order_cloth_name',
-  'order_cloth_color',
-  'cloth_delivery_id',
-])
 
 const deliveryStatusMap = ref({ 0: '未出货', 1: '已出货' })
 const deliveryStatusOptions = ref([
-  { statusValue: 0, statusLabel: '未出货' },
-  { statusValue: 1, statusLabel: '已出货' },
+  { statusValue: false, statusLabel: '未出货' },
+  { statusValue: true, statusLabel: '已出货' },
 ])
 
 const handleDialogSetOrder = async (submit_id, submit_label) => {
@@ -252,7 +258,7 @@ const fetchGrid = async () => {
   for (const key in searchForm.value.filters) {
     const value = searchForm.value.filters[key]
     if (value !== null && value !== undefined && value !== '') {
-      rawFilters[key] = fuzzyFields.has(key) ? `%${value}%` : value
+      rawFilters[key] = value
     }
   }
 
@@ -261,7 +267,8 @@ const fetchGrid = async () => {
       page: pagination.value.page,
       page_size: pagination.value.pageSize,
       filters: rawFilters,
-      date_range: searchForm.value.date_ranges,
+      fuzzy_fields: searchForm.value.fuzzy_fields,
+      date_ranges: searchForm.value.date_ranges,
     })
     gridData.value = res.data.records
     pagination.value.total = res.data.total

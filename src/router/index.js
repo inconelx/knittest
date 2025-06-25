@@ -7,6 +7,7 @@ import CompanyList from '@/views/CompanyList.vue'
 import MachineList from '@/views/MachineList.vue'
 import OrderList from '@/views/OrderList.vue'
 import ClothList from '@/views/ClothList.vue'
+import DeliveryList from '@/views/DeliveryList.vue'
 import { initTokenRefresher, knit_api, stopTokenRefresher } from '@/utils/auth.js'
 import axios from 'axios'
 
@@ -22,6 +23,7 @@ const routes = [
       { path: '/companies', component: CompanyList },
       { path: '/orders', component: OrderList },
       { path: '/clothes', component: ClothList },
+      { path: '/deliveries', component: DeliveryList },
       // {
       //   path: '/companies/copy/:id',
       //   name: 'CopyCompany',

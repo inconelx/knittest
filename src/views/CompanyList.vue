@@ -131,12 +131,14 @@ const searchForm = ref({
     company_type: null,
     company_abbreviation: null,
   },
+  fuzzy_fields: {
+    company_name: null,
+    company_abbreviation: null,
+  },
   date_ranges: {
     add_time: [],
   },
 })
-
-const fuzzyFields = new Set(['company_name', 'company_abbreviation'])
 
 const fetchCompanyType = async () => {
   try {
@@ -157,15 +159,14 @@ const fetchCompanyType = async () => {
 
 const fetchGrid = async () => {
   loading.value = true
+  const rawFilters = {}
 
   await fetchCompanyType()
-
-  const rawFilters = {}
 
   for (const key in searchForm.value.filters) {
     const value = searchForm.value.filters[key]
     if (value !== null && value !== undefined && value !== '') {
-      rawFilters[key] = fuzzyFields.has(key) ? `%${value}%` : value
+      rawFilters[key] = value
     }
   }
 
@@ -174,6 +175,7 @@ const fetchGrid = async () => {
       page: pagination.value.page,
       page_size: pagination.value.pageSize,
       filters: rawFilters,
+      fuzzy_fields: searchForm.value.fuzzy_fields,
       date_ranges: searchForm.value.date_ranges,
     })
     gridData.value = res.data.records

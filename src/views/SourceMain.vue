@@ -1,29 +1,27 @@
 <template>
-  <div>
-    <el-container>
-      <el-aside>
-        <el-menu default-active="$route.path" router>
-          <el-menu-item index="/companies">公司管理</el-menu-item>
-          <el-menu-item index="/machines">机台管理</el-menu-item>
-          <el-menu-item index="/orders">计划单管理</el-menu-item>
-          <el-menu-item index="/clothes">布匹管理</el-menu-item>
-          <!-- <el-menu-item>出货单管理</el-menu-item> -->
-        </el-menu>
-      </el-aside>
+  <el-container style="height: 100%">
+    <el-aside style="width: 160px">
+      <el-menu default-active="$route.path" router>
+        <el-menu-item index="/companies">公司管理</el-menu-item>
+        <el-menu-item index="/machines">机台管理</el-menu-item>
+        <el-menu-item index="/orders">计划单管理</el-menu-item>
+        <el-menu-item index="/clothes">布匹管理</el-menu-item>
+        <el-menu-item index="/deliveries">出货单管理</el-menu-item>
+      </el-menu>
+    </el-aside>
 
-      <el-container>
-        <el-header class="top-header">
-          <div class="top-bar-content">
-            <span>当前用户：{{ userName }}</span>
-            <el-button type="danger" size="small" @click="logout">退出登录</el-button>
-          </div>
-        </el-header>
-        <el-main>
-          <router-view />
-        </el-main>
-      </el-container>
+    <el-container style="height: 100%">
+      <el-header class="top-header">
+        <div class="top-bar-content">
+          <span>当前用户：{{ userName }}</span>
+          <el-button type="danger" size="small" @click="logout">退出登录</el-button>
+        </div>
+      </el-header>
+      <el-main style="height: 100%">
+        <router-view />
+      </el-main>
     </el-container>
-  </div>
+  </el-container>
 </template>
 
 <script setup>
