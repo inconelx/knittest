@@ -4,7 +4,7 @@
       <el-form-item label="机台号" prop="machine_name">
         <el-input v-model="form.machine_name" maxlength="60" />
       </el-form-item>
-      
+
       <el-form-item label="备注" prop="note">
         <el-input
           type="textarea"
@@ -18,11 +18,7 @@
 
     <template #footer>
       <el-button @click="visible = false">取消</el-button>
-      <el-button
-        type="primary"
-        @click="handleSubmit":disabled="saveDisabled"
-        >保存</el-button
-      >
+      <el-button type="primary" @click="handleSubmit" :disabled="saveDisabled">保存</el-button>
     </template>
   </el-dialog>
 </template>
@@ -74,21 +70,26 @@ const open = async (action, id = null) => {
   if (action === 'add') {
     resetForm()
   } else if (id && (action === 'copy' || action === 'edit')) {
-    const res = await knit_api.post('/api/machine/query', {
-      page: 1,
-      page_size: 1,
-      filters: {
-        machine_id: id,
-      },
-    })
-    Object.keys(form.value).forEach((key) => {
-      if (Object.prototype.hasOwnProperty.call(res.data.records[0], key)) {
-        form.value[key] = res.data.records[0][key]
+    try {
+      const res = await knit_api.post('/api/machine/query', {
+        page: 1,
+        page_size: 1,
+        filters: {
+          machine_id: id,
+        },
+      })
+      Object.keys(form.value).forEach((key) => {
+        if (Object.prototype.hasOwnProperty.call(res.data.records[0], key)) {
+          form.value[key] = res.data.records[0][key]
+        }
+      })
+      if (action === 'copy') {
+        // 去掉主键
+        recordId.value = null
       }
-    })
-    if (action === 'copy') {
-      // 去掉主键
-      recordId.value = null
+    } catch (err) {
+      ElMessage.error('加载失败：' + (err.response?.data?.err || err.message))
+      console.error(err)
     }
   }
   saveDisabled.value = false
@@ -103,8 +104,7 @@ const handleSubmit = () => {
         const value = form.value[key]
         if (value !== null && value !== undefined && value !== '') {
           input_values[key] = value
-        }
-        else {
+        } else {
           input_values[key] = null
         }
       }

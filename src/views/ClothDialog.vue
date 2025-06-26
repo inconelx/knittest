@@ -181,34 +181,39 @@ const open = async (action, id = null) => {
   if (action === 'add') {
     resetForm()
   } else if (id && action === 'edit') {
-    const res = await knit_api.post('/api/cloth/query', {
-      page: 1,
-      page_size: 1,
-      filters: {
-        cloth_id: id,
-      },
-    })
-    if (res.data.records[0]['cloth_machine_id']) {
-      machineOptions.value = [
-        {
-          machine_id: res.data.records[0]['cloth_machine_id'],
-          machine_name: res.data.records[0]['machine_name'],
+    try {
+      const res = await knit_api.post('/api/cloth/query', {
+        page: 1,
+        page_size: 1,
+        filters: {
+          cloth_id: id,
         },
-      ]
-    }
-    if (res.data.records[0]['cloth_order_id']) {
-      orderOptions.value = [
-        {
-          order_id: res.data.records[0]['cloth_order_id'],
-          order_no: res.data.records[0]['order_no'],
-        },
-      ]
-    }
-    Object.keys(form.value).forEach((key) => {
-      if (Object.prototype.hasOwnProperty.call(res.data.records[0], key)) {
-        form.value[key] = res.data.records[0][key]
+      })
+      if (res.data.records[0]['cloth_machine_id']) {
+        machineOptions.value = [
+          {
+            machine_id: res.data.records[0]['cloth_machine_id'],
+            machine_name: res.data.records[0]['machine_name'],
+          },
+        ]
       }
-    })
+      if (res.data.records[0]['cloth_order_id']) {
+        orderOptions.value = [
+          {
+            order_id: res.data.records[0]['cloth_order_id'],
+            order_no: res.data.records[0]['order_no'],
+          },
+        ]
+      }
+      Object.keys(form.value).forEach((key) => {
+        if (Object.prototype.hasOwnProperty.call(res.data.records[0], key)) {
+          form.value[key] = res.data.records[0][key]
+        }
+      })
+    } catch (err) {
+      ElMessage.error('加载失败：' + (err.response?.data?.err || err.message))
+      console.error(err)
+    }
   }
   saveDisabled.value = false
 }
