@@ -68,8 +68,8 @@
           </el-select>
         </el-form-item>
 
-        <el-form-item label="出货单ID">
-          <el-input v-model="searchForm.filters.cloth_delivery_id" style="width: 160px" />
+        <el-form-item label="出货单号">
+          <el-input v-model="searchForm.filters.delivery_no" style="width: 160px" />
         </el-form-item>
 
         <el-form-item label="出货时间">
@@ -129,7 +129,7 @@
       <el-table-column prop="order_no" label="产品计划单号" width="160" />
       <el-table-column prop="order_cloth_name" label="产品名称" width="160" />
       <el-table-column prop="order_cloth_color" label="产品颜色" width="160" />
-      <el-table-column prop="cloth_delivery_id" label="出货单ID" width="160" />
+      <el-table-column prop="delivery_no" label="出货单号" width="160" />
       <el-table-column prop="delivery_time" label="出货时间" width="160" />
       <el-table-column prop="cloth_origin_weight" label="原始重量" width="160" />
       <el-table-column prop="cloth_weight_correct" label="重量修正" width="160" />
@@ -182,7 +182,7 @@ const searchForm = ref({
     order_cloth_name: null,
     order_cloth_color: null,
     delivery_status: null,
-    cloth_delivery_id: null,
+    delivery_no: null,
     add_user_name: null,
   },
   fuzzy_fields: {
@@ -191,7 +191,7 @@ const searchForm = ref({
     order_no: null,
     order_cloth_name: null,
     order_cloth_color: null,
-    cloth_delivery_id: null,
+    delivery_no: null,
   },
   date_ranges: {
     add_time: [],
@@ -223,7 +223,8 @@ const handleDialogSetOrder = async (submit_id, submit_label) => {
     fetchGrid()
   } catch (err) {
     if (err !== 'cancel') {
-      ElMessage.error(err.response?.data?.error || '设置失败')
+      ElMessage.error('设置失败：' + (err.response?.data?.err || err.message))
+      console.error(err)
     }
   }
 }
@@ -246,13 +247,16 @@ const weightCorrectSet = async (submit_num) => {
     fetchGrid()
   } catch (err) {
     if (err !== 'cancel') {
-      ElMessage.error(err.response?.data?.error || '设置失败')
+      ElMessage.error('设置失败：' + (err.response?.data?.err || err.message))
+      console.error(err)
     }
   }
 }
 
 const fetchGrid = async () => {
   loading.value = true
+  gridData.value = null
+  pagination.value.total = 0
   const rawFilters = {}
 
   for (const key in searchForm.value.filters) {
@@ -273,9 +277,8 @@ const fetchGrid = async () => {
     gridData.value = res.data.records
     pagination.value.total = res.data.total
   } catch (err) {
-    // ElMessage.error('加载失败')
-    ElMessage.error('保存失败：' + (err.response?.data?.error || err.message))
-    // console.error(err)
+    ElMessage.error('加载失败：' + (err.response?.data?.error || err.message))
+    console.error(err)
   } finally {
     loading.value = false
   }
@@ -326,7 +329,8 @@ const deleteSelected = async () => {
     fetchGrid()
   } catch (err) {
     if (err !== 'cancel') {
-      ElMessage.error(err.response?.data?.error || '删除失败')
+      ElMessage.error('删除失败：' + (err.response?.data?.err || err.message))
+      console.error(err)
     }
   }
 }

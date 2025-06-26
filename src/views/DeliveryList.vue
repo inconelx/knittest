@@ -2,7 +2,7 @@
   <div class="p-4">
     <div class="mb-4 flex justify-between items-center">
       <el-button type="primary" @click="fetchGrid">刷新</el-button>
-      <el-button type="primary" @click="openDialog('add')">新增计划单</el-button>
+      <el-button type="primary" @click="openDialog('add')">新增出货单</el-button>
       <el-button type="primary" @click="resetSearch">重置筛选</el-button>
       <el-button type="primary" :disabled="selectedIds.length === 0" @click="openCompanySelect">
         勾选设置公司
@@ -14,14 +14,8 @@
 
     <div class="mt-4 flex justify-between items-center" label-width="auto">
       <el-form :inline="true" :model="searchForm">
-        <el-form-item label="计划单号">
-          <el-input v-model="searchForm.filters.order_no" style="width: 160px" />
-        </el-form-item>
-        <el-form-item label="产品名称">
-          <el-input v-model="searchForm.filters.order_cloth_name" style="width: 160px" />
-        </el-form-item>
-        <el-form-item label="产品颜色">
-          <el-input v-model="searchForm.filters.order_cloth_color" style="width: 160px" />
+        <el-form-item label="出货单号">
+          <el-input v-model="searchForm.filters.delivery_no" style="width: 160px" />
         </el-form-item>
         <el-form-item label="客户名称">
           <el-input v-model="searchForm.filters.company_name" style="width: 160px" />
@@ -30,7 +24,7 @@
           <el-input v-model="searchForm.filters.company_abbreviation" style="width: 160px" />
         </el-form-item>
 
-        <el-form-item label="录入时间">
+        <el-form-item label="出货时间">
           <el-date-picker
             v-model="searchForm.date_ranges.add_time"
             type="daterange"
@@ -64,22 +58,19 @@
       scrollbar-always
     >
       <el-table-column type="selection" width="40" />
-      <el-table-column prop="order_id" label="ID" width="160" />
-      <el-table-column label="操作" width="160">
+      <el-table-column prop="delivery_id" label="ID" width="160" />
+      <el-table-column label="操作" width="80">
         <template #default="scope">
-          <el-button size="small" @click="openDialog('edit', scope.row.order_id)">编辑</el-button>
-          <el-button size="small" @click="openDialog('copy', scope.row.order_id)">复制</el-button>
+          <el-button size="small" @click="openDialog('edit', scope.row.delivery_id)"
+            >编辑</el-button
+          >
         </template>
       </el-table-column>
-      <el-table-column prop="order_no" label="计划单号" width="160" />
-      <el-table-column prop="order_cloth_name" label="产品名称" width="160" />
-      <el-table-column prop="order_cloth_color" label="产品颜色" width="160" />
+      <el-table-column prop="delivery_no" label="出货单号" width="160" />
       <el-table-column prop="company_name" label="客户名称" width="160" />
       <el-table-column prop="company_abbreviation" label="客户简称" width="160" />
-      <el-table-column prop="order_cloth_piece" label="计划匹数" width="160" />
-      <el-table-column prop="order_cloth_weight" label="计划总重量" width="160" />
-      <el-table-column prop="order_cloth_add" label="空加" width="160" />
-      <el-table-column prop="order_cloth_weight_price" label="产品单价" width="160" />
+      <el-table-column prop="delivery_piece" label="出货总匹数" width="160" />
+      <el-table-column prop="delivery_weight" label="出货总重量" width="160" />
       <el-table-column prop="add_time" label="录入时间" width="160">
         <template #default="{ row }">
           {{ formatDate(row.add_time) }}
@@ -92,7 +83,7 @@
       </el-table-column>
       <el-table-column prop="note" label="备注" width="320" />
     </el-table>
-    <OrderDialog ref="dialogRef" @success="fetchGrid" />
+    <DeliveryDialog ref="dialogRef" @success="fetchGrid" />
     <CompanySelect ref="companySelectRef" @success="handleDialogSetCompany" />
   </div>
 </template>
@@ -104,7 +95,7 @@ import dayjs from 'dayjs'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { knit_api } from '@/utils/auth.js'
 import utc from 'dayjs/plugin/utc'
-import OrderDialog from './OrderDialog.vue'
+import DeliveryDialog from './DeliveryDialog.vue'
 import CompanySelect from './CompanySelect.vue'
 import DecimalDialog from '@/components/DecimalDialog.vue'
 
@@ -124,24 +115,19 @@ const pagination = ref({
 
 const searchForm = ref({
   filters: {
-    order_no: null,
-    order_cloth_name: null,
-    order_cloth_color: null,
+    delivery_no: null,
+    company_name: null,
+    company_abbreviation: null,
+  },
+  fuzzy_fields: {
+    delivery_no: null,
     company_name: null,
     company_abbreviation: null,
   },
   date_ranges: {
-    add_time:[]
+    add_time: [],
   },
 })
-
-const fuzzyFields = new Set([
-  'order_no',
-  'order_cloth_name',
-  'order_cloth_color',
-  'company_name',
-  'company_abbreviation',
-])
 
 const handleDialogSetCompany = async (submit_id, submit_label) => {
   try {
@@ -149,11 +135,11 @@ const handleDialogSetCompany = async (submit_id, submit_label) => {
       type: 'warning',
     })
     const res = await knit_api.post('/api/generic/update_batch', {
-      table_name: 'knit_order',
-      pk_name: 'order_id',
+      table_name: 'knit_delivery',
+      pk_name: 'delivery_id',
       pk_values: selectedIds.value,
       json_data: {
-        order_custom_company_id: submit_id,
+        delivery_company_id: submit_id,
       },
     })
     ElMessage.success(res.data.message || '设置成功')
@@ -161,34 +147,38 @@ const handleDialogSetCompany = async (submit_id, submit_label) => {
     fetchGrid()
   } catch (err) {
     if (err !== 'cancel') {
-      ElMessage.error(err.response?.data?.error || '设置失败')
+      ElMessage.error('设置失败：' + (err.response?.data?.err || err.message))
+      console.error(err)
     }
   }
 }
 
 const fetchGrid = async () => {
   loading.value = true
+  gridData.value = null
+  pagination.value.total = 0
   const rawFilters = {}
 
   for (const key in searchForm.value.filters) {
     const value = searchForm.value.filters[key]
     if (value !== null && value !== undefined && value !== '') {
-      rawFilters[key] = fuzzyFields.has(key) ? `%${value}%` : value
+      rawFilters[key] = value
     }
   }
 
   try {
-    const res = await knit_api.post('/api/order/query', {
+    const res = await knit_api.post('/api/delivery/query', {
       page: pagination.value.page,
       page_size: pagination.value.pageSize,
       filters: rawFilters,
+      fuzzy_fields: searchForm.value.fuzzy_fields,
       date_ranges: searchForm.value.date_ranges,
     })
     gridData.value = res.data.records
     pagination.value.total = res.data.total
   } catch (err) {
-    ElMessage.error('加载失败')
-    // console.error(err)
+    ElMessage.error('加载失败：' + (err.response?.data?.err || err.message))
+    console.error(err)
   } finally {
     loading.value = false
   }
@@ -213,17 +203,17 @@ const handlePageChange = (newPage) => {
 }
 
 const handleSelectionChange = (selection) => {
-  selectedIds.value = selection.map((item) => item.order_id)
+  selectedIds.value = selection.map((item) => item.delivery_id)
 }
 
 const deleteSelected = async () => {
   try {
-    await ElMessageBox.confirm('确定要删除选中的计划单吗？', '提示', {
+    await ElMessageBox.confirm('确定要删除选中的出货单吗？', '提示', {
       type: 'warning',
     })
     const res = await knit_api.post('/api/generic/delete', {
-      table_name: 'knit_order',
-      pk_name: 'order_id',
+      table_name: 'knit_delivery',
+      pk_name: 'delivery_id',
       pk_values: selectedIds.value,
     })
     ElMessage.success(res.data.message || '删除成功')
@@ -231,7 +221,8 @@ const deleteSelected = async () => {
     fetchGrid()
   } catch (err) {
     if (err !== 'cancel') {
-      ElMessage.error(err.response?.data?.error || '删除失败')
+      ElMessage.error('删除失败：' + (err.response?.data?.err || err.message))
+      console.error(err)
     }
   }
 }

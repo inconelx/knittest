@@ -25,13 +25,7 @@
       </el-form-item>
 
       <el-form-item label="原始重量" prop="cloth_origin_weight">
-        <DecimalInput
-          v-model="form.cloth_origin_weight"
-          :decimals="2"
-          min="0"
-          max="999999999"
-          :disabled="mode != 'add'"
-        />
+        <DecimalInput v-model="form.cloth_origin_weight" :decimals="2" min="0" max="999999999" />
       </el-form-item>
 
       <el-form-item label="重量修正" prop="cloth_weight_correct">
@@ -69,7 +63,8 @@
           type="textarea"
           v-model="form.note"
           maxlength="4095"
-          :autosize="{ minRows: 2, maxRows: 4 }"
+          :autosize="false"
+          :rows="4"
         />
       </el-form-item>
     </el-form>
@@ -89,7 +84,7 @@ import { knit_api } from '@/utils/auth.js'
 import DecimalInput from '@/components/DecimalInput.vue'
 
 const visible = ref(false)
-const mode = ref('add') // 'add' | 'edit' | 'copy'
+const mode = ref('add') // 'add' | 'edit'
 const recordId = ref(null)
 const saveDisabled = ref(true)
 const machineLoading = ref(false)
@@ -116,7 +111,6 @@ const rules = {
 const titleMap = {
   add: '新增布匹',
   edit: '编辑布匹',
-  copy: '复制布匹',
 }
 
 const resetForm = () => {
@@ -138,8 +132,9 @@ const remoteSearchMachine = async (query) => {
     })
     machineOptions.value = res.data
     orderOptions.value = res.data
-  } catch (error) {
-    console.error('搜索失败', error)
+  } catch (err) {
+    ElMessage.error('搜索失败：' + (err.response?.data?.err || err.message))
+    console.error(err)
     machineOptions.value = []
   } finally {
     machineLoading.value = false
@@ -158,8 +153,9 @@ const remoteSearchOrder = async (query) => {
       keyword: query,
     })
     orderOptions.value = res.data
-  } catch (error) {
-    console.error('搜索失败', error)
+  } catch (err) {
+    ElMessage.error('搜索失败：' + (err.response?.data?.err || err.message))
+    console.error(err)
     orderOptions.value = []
   } finally {
     orderLoading.value = false
@@ -167,7 +163,7 @@ const remoteSearchOrder = async (query) => {
 }
 
 const handleMachineChange = (val) => {
-  const matched = orderOptions.value.find(item => item.machine_id === val)
+  const matched = orderOptions.value.find((item) => item.machine_id === val)
   form.value.cloth_order_id = matched ? matched.order_id : null
 }
 
@@ -184,7 +180,7 @@ const open = async (action, id = null) => {
 
   if (action === 'add') {
     resetForm()
-  } else if (id && (action === 'copy' || action === 'edit')) {
+  } else if (id && action === 'edit') {
     const res = await knit_api.post('/api/cloth/query', {
       page: 1,
       page_size: 1,
@@ -213,11 +209,6 @@ const open = async (action, id = null) => {
         form.value[key] = res.data.records[0][key]
       }
     })
-
-    if (action === 'copy') {
-      // 去掉主键
-      recordId.value = null
-    }
   }
   saveDisabled.value = false
 }
@@ -235,7 +226,7 @@ const handleSubmit = () => {
           input_values[key] = null
         }
       }
-      if (mode.value === 'add' || mode.value === 'copy') {
+      if (mode.value === 'add') {
         await knit_api.post('/api/generic/insert', {
           table_name: 'knit_cloth',
           pk_name: 'cloth_id',
@@ -254,7 +245,8 @@ const handleSubmit = () => {
       visible.value = false
       emit('success') // 通知父组件刷新列表等
     } catch (err) {
-      ElMessage.error('保存失败：' + (err.response?.data?.error || err.message))
+      ElMessage.error('保存失败：' + (err.response?.data?.err || err.message))
+      console.error(err)
     }
   })
 }

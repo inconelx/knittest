@@ -1,8 +1,9 @@
 <template>
-  <el-dialog v-model="visible" :title="titleName" width="50%" :close-on-click-modal="false">
+  <el-dialog v-model="visible" :title="titleName" width="75%" :close-on-click-modal="false">
     <div class="mb-4 flex justify-between items-center">
       <el-button type="primary" @click="fetchGrid">刷新</el-button>
       <el-button type="primary" @click="resetSearch">重置筛选</el-button>
+      <el-button @click="handleSubmit(null, null)">设置清除</el-button>
       <el-button @click="visible = false">取消</el-button>
     </div>
     <div class="mt-4 flex justify-between items-center" label-width="auto">
@@ -60,10 +61,14 @@
       <el-table-column prop="company_id" label="ID" width="160" />
       <el-table-column label="操作" width="80">
         <template #default="scope">
-          <el-button size="small" @click="handleSubmit(scope.row.company_id, scope.row.company_abbreviation)">选取</el-button>
+          <el-button
+            size="small"
+            @click="handleSubmit(scope.row.company_id, scope.row.company_abbreviation)"
+            >选取</el-button
+          >
         </template>
       </el-table-column>
-       <el-table-column prop="company_name" label="公司名称" width="160" />
+      <el-table-column prop="company_name" label="公司名称" width="160" />
       <el-table-column prop="company_abbreviation" label="简称" width="160" />
       <el-table-column
         prop="company_type"
@@ -102,12 +107,14 @@ const searchForm = ref({
     company_type: null,
     company_abbreviation: null,
   },
+  fuzzy_fields: {
+    company_name: null,
+    company_abbreviation: null,
+  },
   date_ranges: {
-    add_time:[]
+    add_time: [],
   },
 })
-
-const fuzzyFields = new Set(['company_name', 'company_abbreviation'])
 
 const pagination = ref({
   page: 1,
@@ -124,15 +131,16 @@ const companyTypeOptions = ref([])
 
 const fetchGrid = async () => {
   loading.value = true
+  gridData.value = null
+  pagination.value.total = 0
+  const rawFilters = {}
 
   await fetchCompanyType()
-
-  const rawFilters = {}
 
   for (const key in searchForm.value.filters) {
     const value = searchForm.value.filters[key]
     if (value !== null && value !== undefined && value !== '') {
-      rawFilters[key] = fuzzyFields.has(key) ? `%${value}%` : value
+      rawFilters[key] = value
     }
   }
 
@@ -141,13 +149,14 @@ const fetchGrid = async () => {
       page: pagination.value.page,
       page_size: pagination.value.pageSize,
       filters: rawFilters,
+      fuzzy_fields: searchForm.value.fuzzy_fields,
       date_ranges: searchForm.value.date_ranges,
     })
     gridData.value = res.data.records
     pagination.value.total = res.data.total
   } catch (err) {
-    ElMessage.error('加载失败')
-    // console.error(err)
+    ElMessage.error('加载失败：' + (err.response?.data?.err || err.message))
+    console.error(err)
   } finally {
     loading.value = false
   }
@@ -171,7 +180,8 @@ const fetchCompanyType = async () => {
       res.data.map((item) => [item.table_field_value, item.table_field_label]),
     )
   } catch (err) {
-    console.error('公司类型加载失败', err)
+    ElMessage.error('公司类型加载失败：' + (err.response?.data?.err || err.message))
+    console.error(err)
   }
 }
 
@@ -204,7 +214,8 @@ const handleSubmit = (select_id, select_label) => {
     visible.value = false
     emit('success', select_id, select_label) // 通知父组件刷新列表等
   } catch (err) {
-    ElMessage.error('获取失败：' + (err.response?.data?.error || err.message))
+    ElMessage.error('获取失败：' + (err.response?.data?.err || err.message))
+    console.error(err)
   }
 }
 

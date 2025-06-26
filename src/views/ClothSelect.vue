@@ -3,25 +3,32 @@
     <div class="mb-4 flex justify-between items-center">
       <el-button type="primary" @click="fetchGrid">刷新</el-button>
       <el-button type="primary" @click="resetSearch">重置筛选</el-button>
-      <el-button @click="handleSubmit(null, null)">设置清除</el-button>
       <el-button @click="visible = false">取消</el-button>
     </div>
-    <div class="mt-4 flex justify-between items-center" label-width="auto">
-      <el-form :inline="true" :model="searchForm">
+    <div class="mt-4 flex justify-between items-center">
+      <el-form :inline="true" :model="searchForm" label-width="auto">
+        <el-form-item label="布匹ID">
+          <el-input v-model="searchForm.filters.cloth_id" style="width: 160px" />
+        </el-form-item>
+
+        <el-form-item label="机台号">
+          <el-input v-model="searchForm.filters.machine_name" style="width: 160px" />
+        </el-form-item>
+
+        <el-form-item label="录入账号">
+          <el-input v-model="searchForm.filters.add_user_name" style="width: 160px" />
+        </el-form-item>
+
         <el-form-item label="计划单号">
           <el-input v-model="searchForm.filters.order_no" style="width: 160px" />
         </el-form-item>
+
         <el-form-item label="产品名称">
           <el-input v-model="searchForm.filters.order_cloth_name" style="width: 160px" />
         </el-form-item>
+
         <el-form-item label="产品颜色">
           <el-input v-model="searchForm.filters.order_cloth_color" style="width: 160px" />
-        </el-form-item>
-        <el-form-item label="客户名称">
-          <el-input v-model="searchForm.filters.company_name" style="width: 160px" />
-        </el-form-item>
-        <el-form-item label="客户简称">
-          <el-input v-model="searchForm.filters.company_abbreviation" style="width: 160px" />
         </el-form-item>
 
         <el-form-item label="录入时间">
@@ -37,8 +44,7 @@
         </el-form-item>
       </el-form>
     </div>
-
-    <div class="mt-4 flex justify-end">
+    <div class="mt-4 flex justify-end" style="margin: 8px 16px 8px 0">
       <el-pagination
         background
         layout="prev, pager, next, total"
@@ -49,26 +55,38 @@
       />
     </div>
 
-    <el-table v-loading="loading" :data="gridData" border style="width: 100%" scrollbar-always>
-      <el-table-column prop="order_id" label="ID" width="160" />
+    <el-table
+      v-loading="loading"
+      :data="gridData"
+      border
+      style="width: 100%"
+      scrollbar-always
+    >
+      <el-table-column type="selection" width="40" />
+      <el-table-column prop="cloth_id" label="ID" width="160" />
       <el-table-column label="操作" width="80">
         <template #default="scope">
-          <el-button size="small" @click="handleSubmit(scope.row.order_id, scope.row.order_no)"
-            >选取</el-button
-          >
+          <el-button size="small" @click="handleSubmit(scope.row.cloth_id, scope.row.cloth_id)">选取</el-button>
         </template>
       </el-table-column>
-      <el-table-column prop="order_no" label="计划单号" width="160" />
-      <el-table-column prop="order_cloth_name" label="产品名称" width="160" />
-      <el-table-column prop="order_cloth_color" label="产品颜色" width="160" />
-      <el-table-column prop="company_name" label="客户名称" width="160" />
-      <el-table-column prop="company_abbreviation" label="客户简称" width="160" />
-      <el-table-column prop="order_cloth_piece" label="计划匹数" width="160" />
-      <el-table-column prop="order_cloth_weight" label="计划总重量" width="160" />
-      <el-table-column prop="order_cloth_weight_price" label="产品单价" width="160" />
+      <el-table-column prop="machine_name" label="机台号" width="160" />
+      <el-table-column prop="add_user_name" label="录入账号" width="160" />
       <el-table-column prop="add_time" label="录入时间" width="160">
         <template #default="{ row }">
           {{ formatDate(row.add_time) }}
+        </template>
+      </el-table-column>
+      <el-table-column prop="cloth_calculate_weight" label="计算重量" width="160" />
+      <el-table-column prop="order_no" label="产品计划单号" width="160" />
+      <el-table-column prop="order_cloth_name" label="产品名称" width="160" />
+      <el-table-column prop="order_cloth_color" label="产品颜色" width="160" />
+      <el-table-column prop="cloth_origin_weight" label="原始重量" width="160" />
+      <el-table-column prop="cloth_weight_correct" label="重量修正" width="160" />
+      <el-table-column prop="order_cloth_add" label="空加" width="160" />
+
+      <el-table-column prop="edit_time" label="最后修改时间" width="160">
+        <template #default="{ row }">
+          {{ formatDate(row.edit_time) }}
         </template>
       </el-table-column>
       <el-table-column prop="note" label="备注" width="320" />
@@ -93,23 +111,26 @@ const visible = ref(false)
 
 const searchForm = ref({
   filters: {
+    cloth_id: null,
+    machine_name: null,
     order_no: null,
     order_cloth_name: null,
     order_cloth_color: null,
-    company_name: null,
-    company_abbreviation: null,
+    add_user_name: null,
   },
   fuzzy_fields: {
+    cloth_id: null,
+    machine_name: null,
     order_no: null,
     order_cloth_name: null,
     order_cloth_color: null,
-    company_name: null,
-    company_abbreviation: null,
+    add_user_name: null,
   },
   date_ranges: {
     add_time: [],
   },
 })
+
 
 const pagination = ref({
   page: 1,
@@ -119,7 +140,7 @@ const pagination = ref({
 
 const emit = defineEmits(['success'])
 
-const titleName = '计划单选取'
+const titleName = '库存布匹选取'
 
 const fetchGrid = async () => {
   loading.value = true
@@ -133,9 +154,10 @@ const fetchGrid = async () => {
       rawFilters[key] = value
     }
   }
+  rawFilters['delivery_status'] = false
 
   try {
-    const res = await knit_api.post('/api/order/query', {
+    const res = await knit_api.post('/api/cloth/query', {
       page: pagination.value.page,
       page_size: pagination.value.pageSize,
       filters: rawFilters,
@@ -145,7 +167,7 @@ const fetchGrid = async () => {
     gridData.value = res.data.records
     pagination.value.total = res.data.total
   } catch (err) {
-    ElMessage.error('加载失败：' + (err.response?.data?.err || err.message))
+    ElMessage.error('加载失败：' + (err.response?.data?.error || err.message))
     console.error(err)
   } finally {
     loading.value = false
@@ -182,7 +204,7 @@ const handleSubmit = (select_id, select_label) => {
     visible.value = false
     emit('success', select_id, select_label) // 通知父组件刷新列表等
   } catch (err) {
-    ElMessage.error('保存失败：' + (err.response?.data?.err || err.message))
+    ElMessage.error('获取失败：' + (err.response?.data?.error || err.message))
     console.error(err)
   }
 }

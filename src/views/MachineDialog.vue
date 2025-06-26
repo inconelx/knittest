@@ -10,7 +10,8 @@
           type="textarea"
           v-model="form.note"
           maxlength="4095"
-          :autosize="{ minRows: 2, maxRows: 4 }"
+          :autosize="false"
+          :rows="4"
         />
       </el-form-item>
     </el-form>
@@ -126,7 +127,8 @@ const handleSubmit = () => {
       visible.value = false
       emit('success') // 通知父组件刷新列表等
     } catch (err) {
-      ElMessage.error('保存失败：' + (err.response?.data?.error || err.message))
+      ElMessage.error('保存失败：' + (err.response?.data?.err || err.message))
+      console.error(err)
     }
   })
 }

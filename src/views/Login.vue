@@ -45,7 +45,8 @@ const handleLogin = async () => {
     // initTokenRefresher()
     router.push('/')
   } catch (err) {
-    error.value = err.response?.data?.error || '登录失败'
+    error.value = err.response?.data?.err || err.message || '登录失败'
+    console.error(err)
   }
 }
 </script>

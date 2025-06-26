@@ -165,7 +165,8 @@ const handleDialogSetCompany = async (submit_id, submit_label) => {
     fetchGrid()
   } catch (err) {
     if (err !== 'cancel') {
-      ElMessage.error(err.response?.data?.error || '设置失败')
+      ElMessage.error('设置失败：' + (err.response?.data?.err || err.message))
+      console.error(err)
     }
   }
 }
@@ -188,13 +189,16 @@ const weightAddSet = async (submit_num) => {
     fetchGrid()
   } catch (err) {
     if (err !== 'cancel') {
-      ElMessage.error(err.response?.data?.error || '设置失败')
+      ElMessage.error('设置失败：' + (err.response?.data?.err || err.message))
+      console.error(err)
     }
   }
 }
 
 const fetchGrid = async () => {
   loading.value = true
+  gridData.value = null
+  pagination.value.total = 0
   const rawFilters = {}
 
   for (const key in searchForm.value.filters) {
@@ -215,8 +219,8 @@ const fetchGrid = async () => {
     gridData.value = res.data.records
     pagination.value.total = res.data.total
   } catch (err) {
-    ElMessage.error('加载失败')
-    // console.error(err)
+    ElMessage.error('加载失败：' + (err.response?.data?.err || err.message))
+      console.error(err)
   } finally {
     loading.value = false
   }
@@ -263,7 +267,8 @@ const deleteSelected = async () => {
     fetchGrid()
   } catch (err) {
     if (err !== 'cancel') {
-      ElMessage.error(err.response?.data?.error || '删除失败')
+      ElMessage.error('删除失败：' + (err.response?.data?.err || err.message))
+      console.error(err)
     }
   }
 }
