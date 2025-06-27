@@ -1,6 +1,6 @@
 <template>
-  <div class="p-4">
-    <div class="mb-4 flex justify-between items-center">
+  <div class="view_main">
+    <div>
       <el-button type="primary" @click="fetchGrid">刷新</el-button>
       <el-button type="primary" @click="openDialog('add')">新增出货单</el-button>
       <el-button type="primary" @click="resetSearch">重置筛选</el-button>
@@ -12,7 +12,7 @@
       </el-button>
     </div>
 
-    <div class="mt-4 flex justify-between items-center">
+    <div>
       <el-form :inline="true" :model="searchForm" label-width="auto">
         <el-form-item label="出货单号">
           <el-input v-model="searchForm.filters.delivery_no" style="width: 160px" />
@@ -38,7 +38,7 @@
       </el-form>
     </div>
 
-    <div class="mt-4 flex justify-end">
+    <div>
       <el-pagination
         background
         layout="prev, pager, next, total"
@@ -60,6 +60,7 @@
       <el-table-column type="selection" />
       <el-table-column
         type="index"
+        :label="`${selectedIds.length}`"
         :index="(index) => (pagination.page - 1) * pagination.pageSize + index + 1"
       />
       <el-table-column prop="delivery_id" label="ID" width="160" show-overflow-tooltip />
@@ -68,7 +69,7 @@
           <el-button size="small" @click="openDialog('edit', scope.row.delivery_id)"
             >信息编辑</el-button
           >
-          <el-button size="small" @click="openDeliveryClothList(scope.row.delivery_id)"
+          <el-button size="small" @click="openDeliveryClothEdit(scope.row.delivery_id)"
             >出货布匹设置</el-button
           >
         </template>
@@ -102,7 +103,7 @@
     </el-table>
     <DeliveryDialog ref="dialogRef" @success="fetchGrid" />
     <CompanySelect ref="companySelectRef" @success="handleDialogSetCompany" />
-    <DeliveryClothList ref="deliveryClothListRef" @close="fetchGrid" />
+    <DeliveryClothEdit ref="deliveryClothEditRef" @close="fetchGrid" />
   </div>
 </template>
 
@@ -114,7 +115,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { knit_api } from '@/utils/auth.js'
 import utc from 'dayjs/plugin/utc'
 import DeliveryDialog from './DeliveryDialog.vue'
-import DeliveryClothList from './DeliveryClothList.vue'
+import DeliveryClothEdit from './DeliveryClothEdit.vue'
 import CompanySelect from './CompanySelect.vue'
 import DecimalDialog from '@/components/DecimalDialog.vue'
 
@@ -125,7 +126,7 @@ const gridData = ref([])
 const selectedIds = ref([])
 const dialogRef = ref()
 const companySelectRef = ref()
-const deliveryClothListRef = ref()
+const deliveryClothEditRef = ref()
 
 const pagination = ref({
   page: 1,
@@ -207,8 +208,8 @@ const openDialog = (action, id = null) => {
   dialogRef.value.open(action, id)
 }
 
-const openDeliveryClothList = (action, id = null) => {
-  deliveryClothListRef.value.open(action, id)
+const openDeliveryClothEdit = (action, id = null) => {
+  deliveryClothEditRef.value.open(action, id)
 }
 
 const openCompanySelect = () => {

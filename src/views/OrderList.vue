@@ -1,6 +1,6 @@
 <template>
-  <div class="p-4">
-    <div class="mb-4 flex justify-between items-center">
+  <div class="view_main">
+    <div>
       <el-button type="primary" @click="fetchGrid">刷新</el-button>
       <el-button type="primary" @click="openDialog('add')">新增计划单</el-button>
       <el-button type="primary" @click="resetSearch">重置筛选</el-button>
@@ -15,8 +15,8 @@
       </el-button>
     </div>
 
-    <div class="mt-4 flex justify-between items-center" label-width="auto">
-      <el-form :inline="true" :model="searchForm">
+    <div>
+      <el-form :inline="true" :model="searchForm" label-width="auto">
         <el-form-item label="计划单号">
           <el-input v-model="searchForm.filters.order_no" style="width: 160px" />
         </el-form-item>
@@ -47,7 +47,7 @@
       </el-form>
     </div>
 
-    <div class="mt-4 flex justify-end">
+    <div>
       <el-pagination
         background
         layout="prev, pager, next, total"
@@ -69,6 +69,7 @@
       <el-table-column type="selection" />
       <el-table-column
         type="index"
+        :label="`${selectedIds.length}`"
         :index="(index) => (pagination.page - 1) * pagination.pageSize + index + 1"
       />
       <el-table-column prop="order_id" label="ID" width="160" show-overflow-tooltip />

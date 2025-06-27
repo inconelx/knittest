@@ -1,6 +1,6 @@
 <template>
-  <div class="p-4">
-    <div class="mb-4 flex justify-between items-center">
+  <div class="view_main">
+    <div>
       <el-button type="primary" @click="fetchGrid">刷新</el-button>
       <el-button type="primary" @click="openDialog('add')">新增布匹</el-button>
       <el-button type="primary" @click="resetSearch">重置筛选</el-button>
@@ -14,7 +14,7 @@
         删除勾选
       </el-button>
     </div>
-    <div class="mt-4 flex justify-between items-center">
+    <div>
       <el-form :inline="true" :model="searchForm" label-width="auto">
         <el-form-item label="布匹ID">
           <el-input v-model="searchForm.filters.cloth_id" style="width: 160px" />
@@ -85,7 +85,7 @@
         </el-form-item>
       </el-form>
     </div>
-    <div class="mt-4 flex-col justify-end" style="margin: 8px 16px 8px 0">
+    <div>
       <el-pagination
         background
         layout="prev, pager, next, total"
@@ -94,7 +94,6 @@
         :total="pagination.total"
         @current-change="handlePageChange"
       />
-      <div>{{ selectedIds.length }}</div>
     </div>
 
     <el-table
@@ -108,6 +107,7 @@
       <el-table-column type="selection" />
       <el-table-column
         type="index"
+        :label="`${selectedIds.length}`"
         :index="(index) => (pagination.page - 1) * pagination.pageSize + index + 1"
       />
       <el-table-column prop="cloth_id" label="ID" width="160" show-overflow-tooltip />
@@ -146,7 +146,11 @@
         show-overflow-tooltip
       />
       <el-table-column prop="delivery_no" label="出货单号" width="160" show-overflow-tooltip />
-      <el-table-column prop="delivery_time" label="出货时间" width="160" show-overflow-tooltip />
+      <el-table-column prop="delivery_time" label="出货时间" width="160" show-overflow-tooltip>
+        <template #default="{ row }">
+          {{ formatDate(row.delivery_time) }}
+        </template>
+      </el-table-column>
       <el-table-column
         prop="cloth_origin_weight"
         label="原始重量"

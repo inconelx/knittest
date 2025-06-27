@@ -1,13 +1,13 @@
 <template>
   <el-dialog v-model="visible" :title="titleName" width="75%" :close-on-click-modal="false">
-    <div class="mb-4 flex justify-between items-center">
+    <div>
       <el-button type="primary" @click="fetchGrid">刷新</el-button>
       <el-button type="primary" @click="resetSearch">重置筛选</el-button>
       <el-button @click="handleSubmit(null, null)">设置清除</el-button>
       <el-button @click="visible = false">取消</el-button>
     </div>
-    <div class="mt-4 flex justify-between items-center" label-width="auto">
-      <el-form :inline="true" :model="searchForm">
+    <div>
+      <el-form :inline="true" :model="searchForm" label-width="auto">
         <el-form-item label="公司名称">
           <el-input v-model="searchForm.filters.company_name" style="width: 160px" />
         </el-form-item>
@@ -46,7 +46,7 @@
       </el-form>
     </div>
 
-    <div class="mt-4 flex justify-end">
+    <div>
       <el-pagination
         background
         layout="prev, pager, next, total"
@@ -209,6 +209,7 @@ const resetSearch = () => {
 }
 
 const open = async () => {
+  resetSearch()
   visible.value = true
   fetchGrid()
 }

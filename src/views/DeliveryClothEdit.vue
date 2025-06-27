@@ -13,8 +13,7 @@
     <p>
       总匹数: {{ delivery_info.delivery_piece }}&emsp;总重量: {{ delivery_info.delivery_weight }}
     </p>
-    <div class="mb-4 flex justify-between items-center">
-      <el-button type="primary" @click="testHeight">test</el-button>
+    <div>
       <el-button type="primary" @click="fetchGrid">刷新</el-button>
       <el-button type="primary" @click="resetSearch">重置筛选</el-button>
       <el-button type="primary" @click="openClothSelect">新增出货布匹</el-button>
@@ -23,7 +22,7 @@
       </el-button>
       <el-button @click="visible = false">关闭</el-button>
     </div>
-    <div class="mt-4 flex justify-between items-center">
+    <div>
       <el-form :inline="true" :model="searchForm" label-width="auto">
         <el-form-item label="布匹ID">
           <el-input v-model="searchForm.filters.cloth_id" style="width: 160px" />
@@ -62,7 +61,7 @@
         </el-form-item>
       </el-form>
     </div>
-    <div class="mt-4 flex justify-end" style="margin: 8px 16px 8px 0">
+    <div>
       <el-pagination
         background
         layout="prev, pager, next, total"
@@ -86,6 +85,7 @@
       <el-table-column type="selection" width="40" />
       <el-table-column
         type="index"
+        :label="`${selectedIds.length}`"
         :index="(index) => (pagination.page - 1) * pagination.pageSize + index + 1"
       />
       <el-table-column prop="cloth_id" label="ID" width="160" show-overflow-tooltip />
@@ -130,7 +130,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, nextTick } from 'vue'
 import axios from 'axios'
 import dayjs from 'dayjs'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -186,8 +186,6 @@ const emit = defineEmits(['close'])
 
 const titleName = '出货单布匹编辑'
 
-const testHeight = () => {}
-
 const handleDialogAddCloth = async (submit_ids) => {
   try {
     await ElMessageBox.confirm('确定要新增出货布匹吗？', '提示', {
@@ -209,6 +207,21 @@ const handleDialogAddCloth = async (submit_ids) => {
       ElMessage.error('设置失败：' + (err.response?.data?.err || err.message))
       console.error(err)
     }
+  }
+}
+
+const tableHeightSet = async () => {
+  await nextTick()
+  const tableElement = tableRef.value.$el
+  if (!tableElement) return
+
+  const header = tableElement.querySelector('.el-table__header-wrapper')
+  const row = tableElement.querySelector('.el-table__row')
+
+  if (header && row) {
+    const headerHeight = header.offsetHeight
+    const rowHeight = row.offsetHeight
+    tableHeight.value = headerHeight + rowHeight * 10
   }
 }
 
@@ -236,6 +249,7 @@ const fetchGrid = async () => {
     })
     gridData.value = res.data.records
     pagination.value.total = res.data.total
+    tableHeightSet()
 
     const res_total = await knit_api.post('/api/delivery/query', {
       page: 1,
@@ -243,20 +257,6 @@ const fetchGrid = async () => {
       filters: { delivery_id: recordId.value },
     })
     delivery_info.value = res_total.data.records[0]
-
-    await nextTick()
-    const tableElement = tableRef.value.$el
-    if (!tableElement) return
-
-    const header = tableElement.querySelector('.el-table__header-wrapper')
-    const row = tableElement.querySelector('.el-table__row')
-
-    if (header && row) {
-      const headerHeight = header.offsetHeight
-      const rowHeight = row.offsetHeight
-
-      tableHeight.value = headerHeight + rowHeight * 10
-    }
   } catch (err) {
     ElMessage.error('加载失败：' + (err.response?.data?.error || err.message))
     console.error(err)
@@ -318,8 +318,10 @@ const resetSearch = () => {
 }
 
 const open = async (id) => {
-  visible.value = true
+  resetSearch()
   recordId.value = id
+  visible.value = true
+  
   fetchGrid()
 }
 

@@ -1,6 +1,12 @@
 <template>
-  <el-dialog v-model="visible" :title="titleName" width="75%" :close-on-click-modal="false">
-    <div class="mb-4 flex justify-between items-center">
+  <el-dialog
+    v-model="visible"
+    :title="titleName"
+    width="75%"
+    top="2%"
+    :close-on-click-modal="false"
+  >
+    <div>
       <el-button type="primary" @click="fetchGrid">刷新</el-button>
       <el-button type="primary" @click="resetSearch">重置筛选</el-button>
       <el-button type="primary" :disabled="selectedIds.length === 0" @click="handleSubmit"
@@ -8,7 +14,7 @@
       >
       <el-button @click="visible = false">取消</el-button>
     </div>
-    <div class="mt-4 flex justify-between items-center">
+    <div>
       <el-form :inline="true" :model="searchForm" label-width="auto">
         <el-form-item label="布匹ID">
           <el-input v-model="searchForm.filters.cloth_id" style="width: 160px" />
@@ -47,7 +53,7 @@
         </el-form-item>
       </el-form>
     </div>
-    <div class="mt-4 flex justify-end" style="margin: 8px 16px 8px 0">
+    <div>
       <el-pagination
         background
         layout="prev, pager, next, total"
@@ -59,16 +65,19 @@
     </div>
 
     <el-table
+      ref="tableRef"
       v-loading="loading"
       :data="gridData"
       border
       style="width: 100%"
+      :max-height="tableHeight"
       @selection-change="handleSelectionChange"
       scrollbar-always
     >
       <el-table-column type="selection" />
       <el-table-column
         type="index"
+        :label="`${selectedIds.length}`"
         :index="(index) => (pagination.page - 1) * pagination.pageSize + index + 1"
       />
       <el-table-column prop="cloth_id" label="ID" width="160" show-overflow-tooltip />
@@ -118,7 +127,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, nextTick } from 'vue'
 import axios from 'axios'
 import dayjs from 'dayjs'
 import { ElMessage } from 'element-plus'
@@ -126,6 +135,9 @@ import { knit_api } from '@/utils/auth.js'
 import utc from 'dayjs/plugin/utc'
 
 dayjs.extend(utc)
+
+const tableRef = ref(null)
+const tableHeight = ref(null)
 
 const loading = ref(false)
 const gridData = ref([])
@@ -165,6 +177,22 @@ const emit = defineEmits(['success'])
 
 const titleName = '库存布匹选取'
 
+const tableHeightSet = async () => {
+  await nextTick()
+  const tableElement = tableRef.value.$el
+  console.log(tableElement)
+  if (!tableElement) return
+
+  const header = tableElement.querySelector('.el-table__header-wrapper')
+  const row = tableElement.querySelector('.el-table__row')
+
+  if (header && row) {
+    const headerHeight = header.offsetHeight
+    const rowHeight = row.offsetHeight
+    tableHeight.value = headerHeight + rowHeight * 10
+  }
+}
+
 const fetchGrid = async () => {
   loading.value = true
   gridData.value = null
@@ -188,6 +216,7 @@ const fetchGrid = async () => {
     })
     gridData.value = res.data.records
     pagination.value.total = res.data.total
+    tableHeightSet()
   } catch (err) {
     ElMessage.error('加载失败：' + (err.response?.data?.error || err.message))
     console.error(err)
@@ -221,6 +250,7 @@ const resetSearch = () => {
 }
 
 const open = async () => {
+  resetSearch()
   visible.value = true
   fetchGrid()
 }
