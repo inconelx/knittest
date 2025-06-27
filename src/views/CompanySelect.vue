@@ -58,8 +58,12 @@
     </div>
 
     <el-table v-loading="loading" :data="gridData" border style="width: 100%" scrollbar-always>
-      <el-table-column prop="company_id" label="ID" width="160" />
-      <el-table-column label="操作" width="80">
+      <el-table-column
+        type="index"
+        :index="(index) => (pagination.page - 1) * pagination.pageSize + index + 1"
+      />
+      <el-table-column prop="company_id" label="ID" width="160" show-overflow-tooltip />
+      <el-table-column label="操作" width="80" show-overflow-tooltip>
         <template #default="scope">
           <el-button
             size="small"
@@ -68,20 +72,21 @@
           >
         </template>
       </el-table-column>
-      <el-table-column prop="company_name" label="公司名称" width="160" />
-      <el-table-column prop="company_abbreviation" label="简称" width="160" />
+      <el-table-column prop="company_name" label="公司名称" width="160" show-overflow-tooltip />
+      <el-table-column prop="company_abbreviation" label="简称" width="160" show-overflow-tooltip />
       <el-table-column
         prop="company_type"
         label="公司类型"
         :formatter="formatCompanyType"
         width="160"
+        show-overflow-tooltip
       />
-      <el-table-column prop="add_time" label="录入时间" width="160">
+      <el-table-column prop="add_time" label="录入时间" width="160" show-overflow-tooltip>
         <template #default="{ row }">
           {{ formatDate(row.add_time) }}
         </template>
       </el-table-column>
-      <el-table-column prop="note" label="备注" width="320" />
+      <el-table-column prop="note" label="备注" width="320" show-overflow-tooltip />
     </el-table>
   </el-dialog>
 </template>
@@ -118,7 +123,7 @@ const searchForm = ref({
 
 const pagination = ref({
   page: 1,
-  pageSize: 10,
+  pageSize: 100,
   total: 0,
 })
 
@@ -132,7 +137,6 @@ const companyTypeOptions = ref([])
 const fetchGrid = async () => {
   loading.value = true
   gridData.value = null
-  pagination.value.total = 0
   const rawFilters = {}
 
   await fetchCompanyType()

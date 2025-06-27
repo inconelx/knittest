@@ -1,12 +1,27 @@
 <template>
-  <el-dialog v-model="visible" :title="titleName" width="75%" :close-on-click-modal="false">
+  <el-dialog
+    v-model="visible"
+    :title="titleName"
+    width="75%"
+    top="2%"
+    :close-on-click-modal="false"
+    @close="onDialogClose"
+  >
+    <p>当前出货单ID: {{ delivery_info.delivery_id }}</p>
+    <p>当前出货单号: {{ delivery_info.delivery_no }}</p>
+    <p>当前出货客户: {{ delivery_info.company_abbreviation }}</p>
+    <p>
+      总匹数: {{ delivery_info.delivery_piece }}&emsp;总重量: {{ delivery_info.delivery_weight }}
+    </p>
     <div class="mb-4 flex justify-between items-center">
+      <el-button type="primary" @click="testHeight">test</el-button>
       <el-button type="primary" @click="fetchGrid">刷新</el-button>
       <el-button type="primary" @click="resetSearch">重置筛选</el-button>
-      <el-button type="primary" :disabled="selectedIds.length === 0" @click="handleSubmit"
-        >选取勾选布匹</el-button
-      >
-      <el-button @click="visible = false">取消</el-button>
+      <el-button type="primary" @click="openClothSelect">新增出货布匹</el-button>
+      <el-button type="danger" :disabled="selectedIds.length === 0" @click="cancelSelected">
+        撤销勾选布匹
+      </el-button>
+      <el-button @click="visible = false">关闭</el-button>
     </div>
     <div class="mt-4 flex justify-between items-center">
       <el-form :inline="true" :model="searchForm" label-width="auto">
@@ -59,32 +74,34 @@
     </div>
 
     <el-table
+      ref="tableRef"
       v-loading="loading"
       :data="gridData"
       border
       style="width: 100%"
+      :max-height="tableHeight"
       @selection-change="handleSelectionChange"
       scrollbar-always
     >
-      <el-table-column type="selection" />
+      <el-table-column type="selection" width="40" />
       <el-table-column
         type="index"
         :index="(index) => (pagination.page - 1) * pagination.pageSize + index + 1"
       />
       <el-table-column prop="cloth_id" label="ID" width="160" show-overflow-tooltip />
       <el-table-column prop="machine_name" label="机台号" width="160" show-overflow-tooltip />
-      <el-table-column prop="add_user_name" label="录入账号" width="160" show-overflow-tooltip />
-      <el-table-column prop="add_time" label="录入时间" width="160" show-overflow-tooltip>
-        <template #default="{ row }">
-          {{ formatDate(row.add_time) }}
-        </template>
-      </el-table-column>
       <el-table-column
         prop="cloth_calculate_weight"
         label="计算重量"
         width="160"
         show-overflow-tooltip
       />
+      <el-table-column prop="add_user_name" label="录入账号" width="160" show-overflow-tooltip />
+      <el-table-column prop="add_time" label="录入时间" width="160" show-overflow-tooltip>
+        <template #default="{ row }">
+          {{ formatDate(row.add_time) }}
+        </template>
+      </el-table-column>
       <el-table-column prop="order_no" label="产品计划单号" width="160" show-overflow-tooltip />
       <el-table-column prop="order_cloth_name" label="产品名称" width="160" show-overflow-tooltip />
       <el-table-column
@@ -106,32 +123,34 @@
         show-overflow-tooltip
       />
       <el-table-column prop="order_cloth_add" label="空加" width="160" show-overflow-tooltip />
-
-      <el-table-column prop="edit_time" label="最后修改时间" width="160" show-overflow-tooltip>
-        <template #default="{ row }">
-          {{ formatDate(row.edit_time) }}
-        </template>
-      </el-table-column>
       <el-table-column prop="note" label="备注" width="320" show-overflow-tooltip />
     </el-table>
   </el-dialog>
+  <ClothSelect ref="clothSelectRef" @success="handleDialogAddCloth" />
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 import axios from 'axios'
 import dayjs from 'dayjs'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { knit_api } from '@/utils/auth.js'
+import ClothSelect from './ClothSelect.vue'
 import utc from 'dayjs/plugin/utc'
 
 dayjs.extend(utc)
+
+const tableRef = ref(null)
+const tableHeight = ref(null)
 
 const loading = ref(false)
 const gridData = ref([])
 const selectedIds = ref([])
 
 const visible = ref(false)
+const recordId = ref(null)
+
+const clothSelectRef = ref()
 
 const searchForm = ref({
   filters: {
@@ -161,9 +180,37 @@ const pagination = ref({
   total: 0,
 })
 
-const emit = defineEmits(['success'])
+const delivery_info = ref({})
 
-const titleName = '库存布匹选取'
+const emit = defineEmits(['close'])
+
+const titleName = '出货单布匹编辑'
+
+const testHeight = () => {}
+
+const handleDialogAddCloth = async (submit_ids) => {
+  try {
+    await ElMessageBox.confirm('确定要新增出货布匹吗？', '提示', {
+      type: 'warning',
+    })
+    const res = await knit_api.post('/api/generic/update_batch', {
+      table_name: 'knit_cloth',
+      pk_name: 'cloth_id',
+      pk_values: submit_ids,
+      json_data: {
+        cloth_delivery_id: recordId.value,
+      },
+    })
+    ElMessage.success(res.data.message || '设置成功')
+    selectedIds.value = []
+    fetchGrid()
+  } catch (err) {
+    if (err !== 'cancel') {
+      ElMessage.error('设置失败：' + (err.response?.data?.err || err.message))
+      console.error(err)
+    }
+  }
+}
 
 const fetchGrid = async () => {
   loading.value = true
@@ -176,7 +223,8 @@ const fetchGrid = async () => {
       rawFilters[key] = value
     }
   }
-  rawFilters['delivery_status'] = false
+  rawFilters['delivery_status'] = true
+  rawFilters['cloth_delivery_id'] = recordId.value
 
   try {
     const res = await knit_api.post('/api/cloth/query', {
@@ -188,6 +236,27 @@ const fetchGrid = async () => {
     })
     gridData.value = res.data.records
     pagination.value.total = res.data.total
+
+    const res_total = await knit_api.post('/api/delivery/query', {
+      page: 1,
+      page_size: 1,
+      filters: { delivery_id: recordId.value },
+    })
+    delivery_info.value = res_total.data.records[0]
+
+    await nextTick()
+    const tableElement = tableRef.value.$el
+    if (!tableElement) return
+
+    const header = tableElement.querySelector('.el-table__header-wrapper')
+    const row = tableElement.querySelector('.el-table__row')
+
+    if (header && row) {
+      const headerHeight = header.offsetHeight
+      const rowHeight = row.offsetHeight
+
+      tableHeight.value = headerHeight + rowHeight * 10
+    }
   } catch (err) {
     ElMessage.error('加载失败：' + (err.response?.data?.error || err.message))
     console.error(err)
@@ -201,13 +270,41 @@ const handlePageChange = (newPage) => {
   fetchGrid()
 }
 
-const handleSelectionChange = (selection) => {
-  selectedIds.value = selection.map((item) => item.cloth_id)
+const openClothSelect = () => {
+  clothSelectRef.value.open()
 }
 
 const formatDate = (str) => {
   return str ? dayjs.utc(str).format('YYYY/MM/DD HH:mm:ss') : ''
   //   return str ? dayjs(str).format('YYYY/MM/DD HH:mm:ss [GMT+8]') : ''
+}
+
+const handleSelectionChange = (selection) => {
+  selectedIds.value = selection.map((item) => item.cloth_id)
+}
+
+const cancelSelected = async () => {
+  try {
+    await ElMessageBox.confirm('确定要将选中布匹从出货单撤销吗？', '提示', {
+      type: 'warning',
+    })
+    const res = await knit_api.post('/api/generic/update_batch', {
+      table_name: 'knit_cloth',
+      pk_name: 'cloth_id',
+      pk_values: selectedIds.value,
+      json_data: {
+        cloth_delivery_id: null,
+      },
+    })
+    ElMessage.success(res.data.message || '撤销成功')
+    selectedIds.value = []
+    fetchGrid()
+  } catch (err) {
+    if (err !== 'cancel') {
+      ElMessage.error('撤销失败：' + (err.response?.data?.err || err.message))
+      console.error(err)
+    }
+  }
 }
 
 const resetSearch = () => {
@@ -220,19 +317,14 @@ const resetSearch = () => {
   fetchGrid()
 }
 
-const open = async () => {
+const open = async (id) => {
   visible.value = true
+  recordId.value = id
   fetchGrid()
 }
 
-const handleSubmit = () => {
-  try {
-    visible.value = false
-    emit('success', selectedIds.value) // 通知父组件刷新列表等
-  } catch (err) {
-    ElMessage.error('获取失败：' + (err.response?.data?.error || err.message))
-    console.error(err)
-  }
+const onDialogClose = () => {
+  emit('close')
 }
 
 defineExpose({ open })

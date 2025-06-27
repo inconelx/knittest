@@ -66,34 +66,63 @@
       @selection-change="handleSelectionChange"
       scrollbar-always
     >
-      <el-table-column type="selection" width="40" />
-      <el-table-column prop="order_id" label="ID" width="160" />
-      <el-table-column label="操作" width="160">
+      <el-table-column type="selection" />
+      <el-table-column
+        type="index"
+        :index="(index) => (pagination.page - 1) * pagination.pageSize + index + 1"
+      />
+      <el-table-column prop="order_id" label="ID" width="160" show-overflow-tooltip />
+      <el-table-column label="操作" width="160" show-overflow-tooltip>
         <template #default="scope">
           <el-button size="small" @click="openDialog('edit', scope.row.order_id)">编辑</el-button>
           <el-button size="small" @click="openDialog('copy', scope.row.order_id)">复制</el-button>
         </template>
       </el-table-column>
-      <el-table-column prop="order_no" label="计划单号" width="160" />
-      <el-table-column prop="order_cloth_name" label="产品名称" width="160" />
-      <el-table-column prop="order_cloth_color" label="产品颜色" width="160" />
-      <el-table-column prop="company_name" label="客户名称" width="160" />
-      <el-table-column prop="company_abbreviation" label="客户简称" width="160" />
-      <el-table-column prop="order_cloth_piece" label="计划匹数" width="160" />
-      <el-table-column prop="order_cloth_weight" label="计划总重量" width="160" />
-      <el-table-column prop="order_cloth_add" label="空加" width="160" />
-      <el-table-column prop="order_cloth_weight_price" label="产品单价" width="160" />
-      <el-table-column prop="add_time" label="录入时间" width="160">
+      <el-table-column prop="order_no" label="计划单号" width="160" show-overflow-tooltip />
+      <el-table-column prop="order_cloth_name" label="产品名称" width="160" show-overflow-tooltip />
+      <el-table-column
+        prop="order_cloth_color"
+        label="产品颜色"
+        width="160"
+        show-overflow-tooltip
+      />
+      <el-table-column prop="company_name" label="客户名称" width="160" show-overflow-tooltip />
+      <el-table-column
+        prop="company_abbreviation"
+        label="客户简称"
+        width="160"
+        show-overflow-tooltip
+      />
+      <el-table-column
+        prop="order_cloth_piece"
+        label="计划匹数"
+        width="160"
+        show-overflow-tooltip
+      />
+      <el-table-column
+        prop="order_cloth_weight"
+        label="计划总重量"
+        width="160"
+        show-overflow-tooltip
+      />
+      <el-table-column prop="order_cloth_add" label="空加" width="160" show-overflow-tooltip />
+      <el-table-column
+        prop="order_cloth_weight_price"
+        label="产品单价"
+        width="160"
+        show-overflow-tooltip
+      />
+      <el-table-column prop="add_time" label="录入时间" width="160" show-overflow-tooltip>
         <template #default="{ row }">
           {{ formatDate(row.add_time) }}
         </template>
       </el-table-column>
-      <el-table-column prop="edit_time" label="最后修改时间" width="160">
+      <el-table-column prop="edit_time" label="最后修改时间" width="160" show-overflow-tooltip>
         <template #default="{ row }">
           {{ formatDate(row.edit_time) }}
         </template>
       </el-table-column>
-      <el-table-column prop="note" label="备注" width="320" />
+      <el-table-column prop="note" label="备注" width="320" show-overflow-tooltip />
     </el-table>
     <OrderDialog ref="dialogRef" @success="fetchGrid" />
     <CompanySelect ref="companySelectRef" @success="handleDialogSetCompany" />
@@ -123,7 +152,7 @@ const companySelectRef = ref()
 
 const pagination = ref({
   page: 1,
-  pageSize: 10,
+  pageSize: 100,
   total: 0,
 })
 
@@ -198,7 +227,6 @@ const weightAddSet = async (submit_num) => {
 const fetchGrid = async () => {
   loading.value = true
   gridData.value = null
-  pagination.value.total = 0
   const rawFilters = {}
 
   for (const key in searchForm.value.filters) {
@@ -220,7 +248,7 @@ const fetchGrid = async () => {
     pagination.value.total = res.data.total
   } catch (err) {
     ElMessage.error('加载失败：' + (err.response?.data?.err || err.message))
-      console.error(err)
+    console.error(err)
   } finally {
     loading.value = false
   }

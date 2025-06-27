@@ -85,7 +85,7 @@
         </el-form-item>
       </el-form>
     </div>
-    <div class="mt-4 flex justify-end" style="margin: 8px 16px 8px 0">
+    <div class="mt-4 flex-col justify-end" style="margin: 8px 16px 8px 0">
       <el-pagination
         background
         layout="prev, pager, next, total"
@@ -94,6 +94,7 @@
         :total="pagination.total"
         @current-change="handlePageChange"
       />
+      <div>{{ selectedIds.length }}</div>
     </div>
 
     <el-table
@@ -104,43 +105,68 @@
       @selection-change="handleSelectionChange"
       scrollbar-always
     >
-      <el-table-column type="selection" width="40" />
-      <el-table-column prop="cloth_id" label="ID" width="160" />
-      <el-table-column label="操作" width="80">
+      <el-table-column type="selection" />
+      <el-table-column
+        type="index"
+        :index="(index) => (pagination.page - 1) * pagination.pageSize + index + 1"
+      />
+      <el-table-column prop="cloth_id" label="ID" width="160" show-overflow-tooltip />
+      <el-table-column label="操作" width="80" show-overflow-tooltip>
         <template #default="scope">
           <el-button size="small" @click="openDialog('edit', scope.row.cloth_id)">编辑</el-button>
           <!-- <el-button size="small" @click="openDialog('copy', scope.row.cloth_id)">复制</el-button> -->
         </template>
       </el-table-column>
-      <el-table-column prop="machine_name" label="机台号" width="160" />
-      <el-table-column prop="add_user_name" label="录入账号" width="160" />
-      <el-table-column prop="add_time" label="录入时间" width="160">
+      <el-table-column prop="machine_name" label="机台号" width="160" show-overflow-tooltip />
+      <el-table-column prop="add_user_name" label="录入账号" width="160" show-overflow-tooltip />
+      <el-table-column prop="add_time" label="录入时间" width="160" show-overflow-tooltip>
         <template #default="{ row }">
           {{ formatDate(row.add_time) }}
         </template>
       </el-table-column>
-      <el-table-column prop="cloth_calculate_weight" label="计算重量" width="160" />
+      <el-table-column
+        prop="cloth_calculate_weight"
+        label="计算重量"
+        width="160"
+        show-overflow-tooltip
+      />
       <el-table-column
         prop="delivery_status"
         label="出货状态"
         :formatter="formatdeliveryStatus"
         width="160"
+        show-overflow-tooltip
       />
-      <el-table-column prop="order_no" label="产品计划单号" width="160" />
-      <el-table-column prop="order_cloth_name" label="产品名称" width="160" />
-      <el-table-column prop="order_cloth_color" label="产品颜色" width="160" />
-      <el-table-column prop="delivery_no" label="出货单号" width="160" />
-      <el-table-column prop="delivery_time" label="出货时间" width="160" />
-      <el-table-column prop="cloth_origin_weight" label="原始重量" width="160" />
-      <el-table-column prop="cloth_weight_correct" label="重量修正" width="160" />
-      <el-table-column prop="order_cloth_add" label="空加" width="160" />
+      <el-table-column prop="order_no" label="产品计划单号" width="160" show-overflow-tooltip />
+      <el-table-column prop="order_cloth_name" label="产品名称" width="160" show-overflow-tooltip />
+      <el-table-column
+        prop="order_cloth_color"
+        label="产品颜色"
+        width="160"
+        show-overflow-tooltip
+      />
+      <el-table-column prop="delivery_no" label="出货单号" width="160" show-overflow-tooltip />
+      <el-table-column prop="delivery_time" label="出货时间" width="160" show-overflow-tooltip />
+      <el-table-column
+        prop="cloth_origin_weight"
+        label="原始重量"
+        width="160"
+        show-overflow-tooltip
+      />
+      <el-table-column
+        prop="cloth_weight_correct"
+        label="重量修正"
+        width="160"
+        show-overflow-tooltip
+      />
+      <el-table-column prop="order_cloth_add" label="空加" width="160" show-overflow-tooltip />
 
-      <el-table-column prop="edit_time" label="最后修改时间" width="160">
+      <el-table-column prop="edit_time" label="最后修改时间" width="160" show-overflow-tooltip>
         <template #default="{ row }">
           {{ formatDate(row.edit_time) }}
         </template>
       </el-table-column>
-      <el-table-column prop="note" label="备注" width="320" />
+      <el-table-column prop="note" label="备注" width="320" show-overflow-tooltip />
     </el-table>
     <ClothDialog ref="dialogRef" @success="fetchGrid" />
     <OrderSelect ref="orderSelectRef" @success="handleDialogSetOrder" />
@@ -170,7 +196,7 @@ const orderSelectRef = ref()
 
 const pagination = ref({
   page: 1,
-  pageSize: 10,
+  pageSize: 100,
   total: 0,
 })
 
@@ -256,7 +282,6 @@ const weightCorrectSet = async (submit_num) => {
 const fetchGrid = async () => {
   loading.value = true
   gridData.value = null
-  pagination.value.total = 0
   const rawFilters = {}
 
   for (const key in searchForm.value.filters) {
@@ -316,7 +341,7 @@ const handleSelectionChange = (selection) => {
 
 const deleteSelected = async () => {
   try {
-    await ElMessageBox.confirm('确定要删除选中的机台吗？', '提示', {
+    await ElMessageBox.confirm('确定要删除选中的布匹吗？', '提示', {
       type: 'warning',
     })
     const res = await knit_api.post('/api/generic/delete', {

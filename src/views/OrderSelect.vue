@@ -50,28 +50,57 @@
     </div>
 
     <el-table v-loading="loading" :data="gridData" border style="width: 100%" scrollbar-always>
-      <el-table-column prop="order_id" label="ID" width="160" />
-      <el-table-column label="操作" width="80">
+      <el-table-column
+        type="index"
+        :index="(index) => (pagination.page - 1) * pagination.pageSize + index + 1"
+      />
+      <el-table-column prop="order_id" label="ID" width="160" show-overflow-tooltip />
+      <el-table-column label="操作" width="80" show-overflow-tooltip>
         <template #default="scope">
           <el-button size="small" @click="handleSubmit(scope.row.order_id, scope.row.order_no)"
             >选取</el-button
           >
         </template>
       </el-table-column>
-      <el-table-column prop="order_no" label="计划单号" width="160" />
-      <el-table-column prop="order_cloth_name" label="产品名称" width="160" />
-      <el-table-column prop="order_cloth_color" label="产品颜色" width="160" />
-      <el-table-column prop="company_name" label="客户名称" width="160" />
-      <el-table-column prop="company_abbreviation" label="客户简称" width="160" />
-      <el-table-column prop="order_cloth_piece" label="计划匹数" width="160" />
-      <el-table-column prop="order_cloth_weight" label="计划总重量" width="160" />
-      <el-table-column prop="order_cloth_weight_price" label="产品单价" width="160" />
-      <el-table-column prop="add_time" label="录入时间" width="160">
+      <el-table-column prop="order_no" label="计划单号" width="160" show-overflow-tooltip />
+      <el-table-column prop="order_cloth_name" label="产品名称" width="160" show-overflow-tooltip />
+      <el-table-column
+        prop="order_cloth_color"
+        label="产品颜色"
+        width="160"
+        show-overflow-tooltip
+      />
+      <el-table-column prop="company_name" label="客户名称" width="160" show-overflow-tooltip />
+      <el-table-column
+        prop="company_abbreviation"
+        label="客户简称"
+        width="160"
+        show-overflow-tooltip
+      />
+      <el-table-column
+        prop="order_cloth_piece"
+        label="计划匹数"
+        width="160"
+        show-overflow-tooltip
+      />
+      <el-table-column
+        prop="order_cloth_weight"
+        label="计划总重量"
+        width="160"
+        show-overflow-tooltip
+      />
+      <el-table-column
+        prop="order_cloth_weight_price"
+        label="产品单价"
+        width="160"
+        show-overflow-tooltip
+      />
+      <el-table-column prop="add_time" label="录入时间" width="160" show-overflow-tooltip>
         <template #default="{ row }">
           {{ formatDate(row.add_time) }}
         </template>
       </el-table-column>
-      <el-table-column prop="note" label="备注" width="320" />
+      <el-table-column prop="note" label="备注" width="320" show-overflow-tooltip />
     </el-table>
   </el-dialog>
 </template>
@@ -113,7 +142,7 @@ const searchForm = ref({
 
 const pagination = ref({
   page: 1,
-  pageSize: 10,
+  pageSize: 100,
   total: 0,
 })
 
@@ -124,7 +153,6 @@ const titleName = '计划单选取'
 const fetchGrid = async () => {
   loading.value = true
   gridData.value = null
-  pagination.value.total = 0
   const rawFilters = {}
 
   for (const key in searchForm.value.filters) {

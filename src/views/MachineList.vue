@@ -61,29 +61,43 @@
       @selection-change="handleSelectionChange"
       scrollbar-always
     >
-      <el-table-column type="selection" width="40" />
-      <el-table-column prop="machine_id" label="ID" width="160" />
-      <el-table-column label="操作" width="160">
+      <el-table-column type="selection" />
+      <el-table-column
+        type="index"
+        :index="(index) => (pagination.page - 1) * pagination.pageSize + index + 1"
+      />
+      <el-table-column prop="machine_id" label="ID" width="160" show-overflow-tooltip />
+      <el-table-column label="操作" width="160" show-overflow-tooltip>
         <template #default="scope">
           <el-button size="small" @click="openDialog('edit', scope.row.machine_id)">编辑</el-button>
           <el-button size="small" @click="openDialog('copy', scope.row.machine_id)">复制</el-button>
         </template>
       </el-table-column>
-      <el-table-column prop="machine_name" label="机台号" width="160" />
-      <el-table-column prop="order_no" label="生产计划单号" width="160" />
-      <el-table-column prop="order_cloth_name" label="生产产品名称" width="160" />
-      <el-table-column prop="order_cloth_color" label="生产产品颜色" width="160" />
-      <el-table-column prop="add_time" label="录入时间" width="160">
+      <el-table-column prop="machine_name" label="机台号" width="160" show-overflow-tooltip />
+      <el-table-column prop="order_no" label="生产计划单号" width="160" show-overflow-tooltip />
+      <el-table-column
+        prop="order_cloth_name"
+        label="生产产品名称"
+        width="160"
+        show-overflow-tooltip
+      />
+      <el-table-column
+        prop="order_cloth_color"
+        label="生产产品颜色"
+        width="160"
+        show-overflow-tooltip
+      />
+      <el-table-column prop="add_time" label="录入时间" width="160" show-overflow-tooltip>
         <template #default="{ row }">
           {{ formatDate(row.add_time) }}
         </template>
       </el-table-column>
-      <el-table-column prop="edit_time" label="最后修改时间" width="160">
+      <el-table-column prop="edit_time" label="最后修改时间" width="160" show-overflow-tooltip>
         <template #default="{ row }">
           {{ formatDate(row.edit_time) }}
         </template>
       </el-table-column>
-      <el-table-column prop="note" label="备注" width="320" />
+      <el-table-column prop="note" label="备注" width="320" show-overflow-tooltip />
     </el-table>
     <MachineDialog ref="dialogRef" @success="fetchGrid" />
     <OrderSelect ref="orderSelectRef" @success="handleDialogSetOrder" />
@@ -110,7 +124,7 @@ const orderSelectRef = ref()
 
 const pagination = ref({
   page: 1,
-  pageSize: 10,
+  pageSize: 100,
   total: 0,
 })
 
@@ -159,7 +173,6 @@ const handleDialogSetOrder = async (submit_id, submit_label) => {
 const fetchGrid = async () => {
   loading.value = true
   gridData.value = null
-  pagination.value.total = 0
   const rawFilters = {}
 
   for (const key in searchForm.value.filters) {

@@ -12,8 +12,8 @@
       </el-button>
     </div>
 
-    <div class="mt-4 flex justify-between items-center" label-width="auto">
-      <el-form :inline="true" :model="searchForm">
+    <div class="mt-4 flex justify-between items-center">
+      <el-form :inline="true" :model="searchForm" label-width="auto">
         <el-form-item label="出货单号">
           <el-input v-model="searchForm.filters.delivery_no" style="width: 160px" />
         </el-form-item>
@@ -57,34 +57,52 @@
       @selection-change="handleSelectionChange"
       scrollbar-always
     >
-      <el-table-column type="selection" width="40" />
-      <el-table-column prop="delivery_id" label="ID" width="160" />
-      <el-table-column label="操作" width="80">
+      <el-table-column type="selection" />
+      <el-table-column
+        type="index"
+        :index="(index) => (pagination.page - 1) * pagination.pageSize + index + 1"
+      />
+      <el-table-column prop="delivery_id" label="ID" width="160" show-overflow-tooltip />
+      <el-table-column label="操作" width="240" show-overflow-tooltip>
         <template #default="scope">
           <el-button size="small" @click="openDialog('edit', scope.row.delivery_id)"
-            >编辑</el-button
+            >信息编辑</el-button
+          >
+          <el-button size="small" @click="openDeliveryClothList(scope.row.delivery_id)"
+            >出货布匹设置</el-button
           >
         </template>
       </el-table-column>
-      <el-table-column prop="delivery_no" label="出货单号" width="160" />
-      <el-table-column prop="company_name" label="客户名称" width="160" />
-      <el-table-column prop="company_abbreviation" label="客户简称" width="160" />
-      <el-table-column prop="delivery_piece" label="出货总匹数" width="160" />
-      <el-table-column prop="delivery_weight" label="出货总重量" width="160" />
-      <el-table-column prop="add_time" label="录入时间" width="160">
+      <el-table-column prop="delivery_no" label="出货单号" width="160" show-overflow-tooltip />
+      <el-table-column prop="company_name" label="客户名称" width="160" show-overflow-tooltip />
+      <el-table-column
+        prop="company_abbreviation"
+        label="客户简称"
+        width="160"
+        show-overflow-tooltip
+      />
+      <el-table-column prop="delivery_piece" label="出货总匹数" width="160" show-overflow-tooltip />
+      <el-table-column
+        prop="delivery_weight"
+        label="出货总重量"
+        width="160"
+        show-overflow-tooltip
+      />
+      <el-table-column prop="add_time" label="录入时间" width="160" show-overflow-tooltip>
         <template #default="{ row }">
           {{ formatDate(row.add_time) }}
         </template>
       </el-table-column>
-      <el-table-column prop="edit_time" label="最后修改时间" width="160">
+      <el-table-column prop="edit_time" label="最后修改时间" width="160" show-overflow-tooltip>
         <template #default="{ row }">
           {{ formatDate(row.edit_time) }}
         </template>
       </el-table-column>
-      <el-table-column prop="note" label="备注" width="320" />
+      <el-table-column prop="note" label="备注" width="320" show-overflow-tooltip />
     </el-table>
     <DeliveryDialog ref="dialogRef" @success="fetchGrid" />
     <CompanySelect ref="companySelectRef" @success="handleDialogSetCompany" />
+    <DeliveryClothList ref="deliveryClothListRef" @close="fetchGrid" />
   </div>
 </template>
 
@@ -96,6 +114,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { knit_api } from '@/utils/auth.js'
 import utc from 'dayjs/plugin/utc'
 import DeliveryDialog from './DeliveryDialog.vue'
+import DeliveryClothList from './DeliveryClothList.vue'
 import CompanySelect from './CompanySelect.vue'
 import DecimalDialog from '@/components/DecimalDialog.vue'
 
@@ -106,10 +125,11 @@ const gridData = ref([])
 const selectedIds = ref([])
 const dialogRef = ref()
 const companySelectRef = ref()
+const deliveryClothListRef = ref()
 
 const pagination = ref({
   page: 1,
-  pageSize: 10,
+  pageSize: 100,
   total: 0,
 })
 
@@ -156,7 +176,6 @@ const handleDialogSetCompany = async (submit_id, submit_label) => {
 const fetchGrid = async () => {
   loading.value = true
   gridData.value = null
-  pagination.value.total = 0
   const rawFilters = {}
 
   for (const key in searchForm.value.filters) {
@@ -186,6 +205,10 @@ const fetchGrid = async () => {
 
 const openDialog = (action, id = null) => {
   dialogRef.value.open(action, id)
+}
+
+const openDeliveryClothList = (action, id = null) => {
+  deliveryClothListRef.value.open(action, id)
 }
 
 const openCompanySelect = () => {
