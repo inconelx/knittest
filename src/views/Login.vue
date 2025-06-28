@@ -26,6 +26,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 import { initTokenRefresher, knit_api } from '@/utils/auth.js'
+import JSEncrypt from 'jsencrypt'
 
 const router = useRouter()
 const form = ref({
@@ -37,7 +38,15 @@ const error = ref('')
 const handleLogin = async () => {
   error.value = ''
   try {
-    const res = await knit_api.post('/api/login', form.value)
+    const public_key = (await knit_api.get('/api/public_key')).data.public_key
+    console.log(public_key)
+    const encryptor = new JSEncrypt()
+    encryptor.setPublicKey(public_key)
+
+    const res = await knit_api.post('/api/login', {
+      user_name: form.value.user_name,
+      user_password_encrypted: encryptor.encrypt(form.value.user_password),
+    })
     localStorage.setItem('token', res.data.token)
     localStorage.setItem('expires_at', res.data.expires_at)
     localStorage.setItem('expires_seconds', res.data.expires_seconds)
