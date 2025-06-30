@@ -19,11 +19,42 @@ const routes = [
     meta: { requiresAuth: true },
     children: [
       { path: '', redirect: '/companies' }, // 默认显示
-      { path: '/users', component: UserList },
-      { path: '/companies', component: CompanyList },
-      { path: '/orders', component: OrderList },
-      { path: '/clothes', component: ClothList },
-      { path: '/deliveries', component: DeliveryList },
+      // { path: '/users', component: UserList },
+      {
+        path: '/companies',
+        component: CompanyList,
+        meta: {
+          title: '公司管理',
+        },
+      },
+      {
+        path: '/machines',
+        component: MachineList,
+        meta: {
+          title: '机台管理',
+        },
+      },
+      {
+        path: '/orders',
+        component: OrderList,
+        meta: {
+          title: '计划单管理',
+        },
+      },
+      {
+        path: '/clothes',
+        component: ClothList,
+        meta: {
+          title: '布匹管理',
+        },
+      },
+      {
+        path: '/deliveries',
+        component: DeliveryList,
+        meta: {
+          title: '出货单管理',
+        },
+      },
       // {
       //   path: '/companies/copy/:id',
       //   name: 'CopyCompany',
@@ -42,7 +73,7 @@ const routes = [
       //   component: EditCompany,
       //   props: true,
       // },
-      { path: '/machines', component: MachineList },
+
       // 其他子页面...
     ],
   },
@@ -63,8 +94,7 @@ router.beforeEach(async (to, from, next) => {
       if (res.data.logged_in) {
         initTokenRefresher()
         next()
-      }
-      else {
+      } else {
         stopTokenRefresher()
         next('/login')
       }

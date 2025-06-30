@@ -204,7 +204,7 @@ const handleDialogAddCloth = async (submit_ids) => {
     fetchGrid()
   } catch (err) {
     if (err !== 'cancel') {
-      ElMessage.error('设置失败：' + (err.response?.data?.err || err.message))
+      ElMessage.error('设置失败：' + (err.response?.data?.error || err.message))
       console.error(err)
     }
   }
@@ -301,7 +301,7 @@ const cancelSelected = async () => {
     fetchGrid()
   } catch (err) {
     if (err !== 'cancel') {
-      ElMessage.error('撤销失败：' + (err.response?.data?.err || err.message))
+      ElMessage.error('撤销失败：' + (err.response?.data?.error || err.message))
       console.error(err)
     }
   }

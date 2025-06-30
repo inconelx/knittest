@@ -98,7 +98,7 @@ const remoteSearchCompany = async (query) => {
     })
     companyOptions.value = res.data
   } catch (err) {
-    ElMessage.error('搜索失败：' + (err.response?.data?.err || err.message))
+    ElMessage.error('搜索失败：' + (err.response?.data?.error || err.message))
     console.error(err)
     companyOptions.value = []
   } finally {
@@ -140,7 +140,7 @@ const open = async (action, id = null) => {
         }
       })
     } catch (err) {
-      ElMessage.error('加载失败：' + (err.response?.data?.err || err.message))
+      ElMessage.error('加载失败：' + (err.response?.data?.error || err.message))
       console.error(err)
     }
   }
@@ -179,7 +179,7 @@ const handleSubmit = () => {
       visible.value = false
       emit('success') // 通知父组件刷新列表等
     } catch (err) {
-      ElMessage.error('保存失败：' + (err.response?.data?.err || err.message))
+      ElMessage.error('保存失败：' + (err.response?.data?.error || err.message))
       console.error(err)
     }
   })

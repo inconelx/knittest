@@ -117,7 +117,7 @@ const open = async (action, id = null) => {
         recordId.value = null
       }
     } catch (err) {
-      ElMessage.error('加载失败：' + (err.response?.data?.err || err.message))
+      ElMessage.error('加载失败：' + (err.response?.data?.error || err.message))
       console.error(err)
     }
   }
@@ -156,7 +156,7 @@ const handleSubmit = () => {
       visible.value = false
       emit('success') // 通知父组件刷新列表等
     } catch (err) {
-      ElMessage.error('保存失败：' + (err.response?.data?.err || err.message))
+      ElMessage.error('保存失败：' + (err.response?.data?.error || err.message))
       console.error(err)
     }
   })

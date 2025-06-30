@@ -39,7 +39,6 @@ const handleLogin = async () => {
   error.value = ''
   try {
     const public_key = (await knit_api.get('/api/public_key')).data.public_key
-    console.log(public_key)
     const encryptor = new JSEncrypt()
     encryptor.setPublicKey(public_key)
 
@@ -54,7 +53,7 @@ const handleLogin = async () => {
     // initTokenRefresher()
     router.push('/')
   } catch (err) {
-    error.value = err.response?.data?.err || err.message || '登录失败'
+    error.value = err.response?.data?.error || err.message || '登录失败'
     console.error(err)
   }
 }

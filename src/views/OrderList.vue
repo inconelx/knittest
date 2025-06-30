@@ -59,10 +59,12 @@
     </div>
 
     <el-table
+      ref="tableRef"
       v-loading="loading"
       :data="gridData"
       border
       style="width: 100%"
+      :max-height="tableHeight"
       @selection-change="handleSelectionChange"
       scrollbar-always
     >
@@ -132,7 +134,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 import axios from 'axios'
 import dayjs from 'dayjs'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -143,6 +145,9 @@ import CompanySelect from './CompanySelect.vue'
 import DecimalDialog from '@/components/DecimalDialog.vue'
 
 dayjs.extend(utc)
+
+const tableRef = ref(null)
+const tableHeight = ref(null)
 
 const loading = ref(false)
 const gridData = ref([])
@@ -195,7 +200,7 @@ const handleDialogSetCompany = async (submit_id, submit_label) => {
     fetchGrid()
   } catch (err) {
     if (err !== 'cancel') {
-      ElMessage.error('设置失败：' + (err.response?.data?.err || err.message))
+      ElMessage.error('设置失败：' + (err.response?.data?.error || err.message))
       console.error(err)
     }
   }
@@ -219,9 +224,24 @@ const weightAddSet = async (submit_num) => {
     fetchGrid()
   } catch (err) {
     if (err !== 'cancel') {
-      ElMessage.error('设置失败：' + (err.response?.data?.err || err.message))
+      ElMessage.error('设置失败：' + (err.response?.data?.error || err.message))
       console.error(err)
     }
+  }
+}
+
+const tableHeightSet = async () => {
+  await nextTick()
+  const tableElement = tableRef.value.$el
+  if (!tableElement) return
+
+  const header = tableElement.querySelector('.el-table__header-wrapper')
+  const row = tableElement.querySelector('.el-table__row')
+
+  if (header && row) {
+    const headerHeight = header.offsetHeight
+    const rowHeight = row.offsetHeight
+    tableHeight.value = headerHeight + rowHeight * 10
   }
 }
 
@@ -247,8 +267,9 @@ const fetchGrid = async () => {
     })
     gridData.value = res.data.records
     pagination.value.total = res.data.total
+    tableHeightSet()
   } catch (err) {
-    ElMessage.error('加载失败：' + (err.response?.data?.err || err.message))
+    ElMessage.error('加载失败：' + (err.response?.data?.error || err.message))
     console.error(err)
   } finally {
     loading.value = false
@@ -296,7 +317,7 @@ const deleteSelected = async () => {
     fetchGrid()
   } catch (err) {
     if (err !== 'cancel') {
-      ElMessage.error('删除失败：' + (err.response?.data?.err || err.message))
+      ElMessage.error('删除失败：' + (err.response?.data?.error || err.message))
       console.error(err)
     }
   }

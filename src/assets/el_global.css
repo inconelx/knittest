@@ -75,3 +75,48 @@
   display: flex;
   flex-direction: column;
 }
+
+.el-dropdown:focus,
+.el-dropdown-link:focus {
+  outline: none !important;
+}
+
+.el-dropdown-menu {
+  max-height: 400px !important;
+  overflow-y: auto !important;
+}
+
+.el-dropdown-menu__item {
+  line-height: 48px !important;
+}
+
+.el-dialog {
+  min-width: 600px !important; /* 最大宽度也限制为100% */
+}
+
+@media screen and (max-width: 600px) {
+  .el-dialog {
+    min-width: auto !important;
+    width: 100% !important;
+  }
+  .view_main {
+    height: auto;
+  }
+}
+
+.el-date-range-picker__content {
+  width: 100% !important;
+}
+
+.el-date-range-picker .el-picker-panel__body {
+  min-width: 320px !important;
+}
+
+.el-date-range-picker{
+  width: 320px !important;
+}
+
+.el-picker-panel__body {
+  display: flex!important;
+  flex-direction: column !important;
+}

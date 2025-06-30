@@ -57,7 +57,16 @@
       />
     </div>
 
-    <el-table v-loading="loading" :data="gridData" border style="width: 100%" scrollbar-always>
+    <el-table
+      ref="tableRef"
+      v-loading="loading"
+      :data="gridData"
+      border
+      style="width: 100%"
+      :max-height="tableHeight"
+      @selection-change="handleSelectionChange"
+      scrollbar-always
+    >
       <el-table-column
         type="index"
         :index="(index) => (pagination.page - 1) * pagination.pageSize + index + 1"
@@ -92,7 +101,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, nextTick } from 'vue'
 import axios from 'axios'
 import dayjs from 'dayjs'
 import { ElMessage } from 'element-plus'
@@ -100,6 +109,9 @@ import { knit_api } from '@/utils/auth.js'
 import utc from 'dayjs/plugin/utc'
 
 dayjs.extend(utc)
+
+const tableRef = ref(null)
+const tableHeight = ref(null)
 
 const loading = ref(false)
 const gridData = ref([])
@@ -134,6 +146,21 @@ const titleName = '公司选取'
 const companyTypeMap = ref({})
 const companyTypeOptions = ref([])
 
+const tableHeightSet = async () => {
+  await nextTick()
+  const tableElement = tableRef.value.$el
+  if (!tableElement) return
+
+  const header = tableElement.querySelector('.el-table__header-wrapper')
+  const row = tableElement.querySelector('.el-table__row')
+
+  if (header && row) {
+    const headerHeight = header.offsetHeight
+    const rowHeight = row.offsetHeight
+    tableHeight.value = headerHeight + rowHeight * 10
+  }
+}
+
 const fetchGrid = async () => {
   loading.value = true
   gridData.value = null
@@ -158,8 +185,9 @@ const fetchGrid = async () => {
     })
     gridData.value = res.data.records
     pagination.value.total = res.data.total
+    tableHeightSet()
   } catch (err) {
-    ElMessage.error('加载失败：' + (err.response?.data?.err || err.message))
+    ElMessage.error('加载失败：' + (err.response?.data?.error || err.message))
     console.error(err)
   } finally {
     loading.value = false
@@ -184,7 +212,7 @@ const fetchCompanyType = async () => {
       res.data.map((item) => [item.table_field_value, item.table_field_label]),
     )
   } catch (err) {
-    ElMessage.error('公司类型加载失败：' + (err.response?.data?.err || err.message))
+    ElMessage.error('公司类型加载失败：' + (err.response?.data?.error || err.message))
     console.error(err)
   }
 }
@@ -219,7 +247,7 @@ const handleSubmit = (select_id, select_label) => {
     visible.value = false
     emit('success', select_id, select_label) // 通知父组件刷新列表等
   } catch (err) {
-    ElMessage.error('获取失败：' + (err.response?.data?.err || err.message))
+    ElMessage.error('获取失败：' + (err.response?.data?.error || err.message))
     console.error(err)
   }
 }
