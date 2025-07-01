@@ -5,15 +5,13 @@ import router from '@/router/index.js'
 //针织api
 export const knit_api = axios.create({
   baseURL: 'http://localhost:5000',
+  withCredentials: true,
 })
 
 // 请求拦截器：自动加上 token
 knit_api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token')
-    if (token) {
-      config.headers['Authorization'] = token
-    }
+    //已通过cookie自动附带
     return config
   },
   (error) => Promise.reject(error),
@@ -37,7 +35,6 @@ let refreshTimer = null // 全局唯一计时器引用
 async function refreshToken() {
   try {
     const res = await knit_api.post('/api/refresh-token')
-    localStorage.setItem('token', res.data.token)
     localStorage.setItem('expires_at', res.data.expires_at)
     localStorage.setItem('expires_seconds', res.data.expires_seconds)
     localStorage.setItem('user_name', res.data.user_name)
@@ -46,7 +43,6 @@ async function refreshToken() {
   } catch (error) {
     // console.error('❌ Token refresh failed:', error)
     stopTokenRefresher()
-    router.push('/login')
   }
 }
 
@@ -55,10 +51,9 @@ export function initTokenRefresher() {
 
   const expiresSeconds = parseInt(localStorage.getItem('expires_seconds'))
   const expiresAt = parseInt(localStorage.getItem('expires_at'))
-  const token = localStorage.getItem('token')
 
-  if (!expiresSeconds || !token) {
-    // console.warn('⚠️ Cannot start token refresher: missing token or expiration.')
+  if (!expiresSeconds || !expiresAt) {
+    // console.warn('⚠️ Cannot start token refresher: missing expiration.')
     return
   }
 

@@ -47,7 +47,7 @@
 <script setup>
 import { ref, onMounted, computed, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { stopTokenRefresher } from '@/utils/auth.js'
+import { stopTokenRefresher, knit_api } from '@/utils/auth.js'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { ArrowDown } from '@element-plus/icons-vue'
 
@@ -66,7 +66,6 @@ onMounted(() => {
 })
 
 const handleMenuClick = (command) => {
-  console.log(routeOptions)
   router.push(`${command}`)
 }
 
@@ -75,9 +74,9 @@ const logout = async () => {
   await ElMessageBox.confirm('确定要退出登录吗？', '提示', {
     type: 'warning',
   })
-  localStorage.removeItem('token')
-  router.push('/login')
+  await knit_api.post('/api/logout')
   stopTokenRefresher()
+  router.push('/login')
 }
 </script>
 <style scoped>

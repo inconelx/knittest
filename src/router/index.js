@@ -87,8 +87,6 @@ const router = createRouter({
 // 路由守卫（保持和之前一样）
 router.beforeEach(async (to, from, next) => {
   if (to.meta.requiresAuth) {
-    const token = localStorage.getItem('token')
-    if (!token) return next('/login')
     try {
       const res = await knit_api.get('/api/check-login')
       if (res.data.logged_in) {

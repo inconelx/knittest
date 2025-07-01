@@ -46,7 +46,6 @@ const handleLogin = async () => {
       user_name: form.value.user_name,
       user_password_encrypted: encryptor.encrypt(form.value.user_password),
     })
-    localStorage.setItem('token', res.data.token)
     localStorage.setItem('expires_at', res.data.expires_at)
     localStorage.setItem('expires_seconds', res.data.expires_seconds)
     localStorage.setItem('user_name', res.data.user_name)
