@@ -2,8 +2,11 @@
   <div class="view_main">
     <div>
       <el-button type="primary" @click="fetchGrid">刷新</el-button>
-      <el-button type="primary" @click="openDialog('add')">新增计划单</el-button>
+      <el-button type="primary" @click="openDialog('add')">新增纱线采购单</el-button>
       <el-button type="primary" @click="resetSearch">重置筛选</el-button>
+      <el-button type="primary" :disabled="selectedIds.length === 0" @click="openCompanySelect">
+        勾选设置公司
+      </el-button>
       <el-button type="danger" :disabled="selectedIds.length === 0" @click="deleteSelected">
         删除勾选
       </el-button>
@@ -11,27 +14,22 @@
 
     <div>
       <el-form :inline="true" :model="searchForm" label-width="auto">
-        <el-form-item label="账号">
-          <el-input v-model="searchForm.filters.user_name" style="width: 160px" />
+        <el-form-item label="纱线入库单号">
+          <el-input v-model="searchForm.filters.yarn_yarn_purchase_no" style="width: 160px" />
         </el-form-item>
-        <el-form-item label="姓名">
-          <el-input v-model="searchForm.filters.real_name" style="width: 160px" />
+        <el-form-item label="纱线名称">
+          <el-input v-model="searchForm.filters.yarn_name" style="width: 160px" />
         </el-form-item>
-        <el-form-item label="账号状态">
-          <el-select
-            v-model="searchForm.filters.user_status"
-            placeholder="请选择账号状态"
-            style="width: 160px"
-            clearable
-          >
-            <el-option
-              v-for="item in userStatusOptions"
-              :key="item.statusValue"
-              :label="item.statusLabel"
-              :value="item.statusValue"
-            />
-          </el-select>
+        <el-form-item label="纱线颜色">
+          <el-input v-model="searchForm.filters.yarn_color" style="width: 160px" />
         </el-form-item>
+        <el-form-item label="客户名称">
+          <el-input v-model="searchForm.filters.company_name" style="width: 160px" />
+        </el-form-item>
+        <el-form-item label="客户简称">
+          <el-input v-model="searchForm.filters.company_abbreviation" style="width: 160px" />
+        </el-form-item>
+
         <el-form-item label="录入时间">
           <el-date-picker
             v-model="searchForm.date_ranges.add_time"
@@ -73,18 +71,55 @@
         :label="`${selectedIds.length}`"
         :index="(index) => (pagination.page - 1) * pagination.pageSize + index + 1"
       />
-      <el-table-column prop="user_id" label="ID" width="160" show-overflow-tooltip />
+      <el-table-column prop="yarn_id" label="ID" width="160" show-overflow-tooltip />
       <el-table-column label="操作" width="160" show-overflow-tooltip>
         <template #default="scope">
-          <el-button size="small" @click="openDialog('edit', scope.row.user_id)">编辑</el-button>
+          <el-button size="small" @click="openDialog('edit', scope.row.yarn_id)">编辑</el-button>
+          <el-button size="small" @click="openDialog('copy', scope.row.yarn_id)">复制</el-button>
         </template>
       </el-table-column>
-      <el-table-column prop="user_name" label="账号" width="160" show-overflow-tooltip />
-      <el-table-column prop="real_name" label="姓名" width="160" show-overflow-tooltip />
+      <el-table-column prop="yarn_purchase_no" label="纱线入库单号" width="160" show-overflow-tooltip />
+      <el-table-column prop="yarn_name" label="纱线名称" width="160" show-overflow-tooltip />
       <el-table-column
-        prop="user_status"
-        label="账号状态"
-        :formatter="formatUserStatus"
+        prop="yarn_color"
+        label="纱线颜色"
+        width="160"
+        show-overflow-tooltip
+      />
+      <el-table-column prop="company_name" label="客户名称" width="160" show-overflow-tooltip />
+      <el-table-column
+        prop="company_abbreviation"
+        label="客户简称"
+        width="160"
+        show-overflow-tooltip
+      />
+      <el-table-column
+        prop="yarn_box"
+        label="纱线箱数"
+        width="160"
+        show-overflow-tooltip
+      />
+      <el-table-column
+        prop="yarn_box_net_weight"
+        label="纱线每箱净重"
+        width="160"
+        show-overflow-tooltip
+      />
+      <el-table-column
+        prop="yarn_net_weight"
+        label="纱线总净重"
+        width="160"
+        show-overflow-tooltip
+      />
+      <el-table-column
+        prop="yarn_gross_weight"
+        label="纱线总毛重"
+        width="160"
+        show-overflow-tooltip
+      />
+      <el-table-column
+        prop="yarn_weight_price"
+        label="纱线单价"
         width="160"
         show-overflow-tooltip
       />
@@ -100,7 +135,8 @@
       </el-table-column>
       <el-table-column prop="note" label="备注" width="320" show-overflow-tooltip />
     </el-table>
-    <UserDialog ref="dialogRef" @success="fetchGrid" />
+    <OrderDialog ref="dialogRef" @success="fetchGrid" />
+    <CompanySelect ref="companySelectRef" @success="handleDialogSetCompany" />
   </div>
 </template>
 
@@ -111,7 +147,8 @@ import dayjs from 'dayjs'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { knit_api } from '@/utils/auth.js'
 import utc from 'dayjs/plugin/utc'
-import UserDialog from './OrderDialog.vue'
+import OrderDialog from './OrderDialog.vue'
+import CompanySelect from './CompanySelect.vue'
 
 dayjs.extend(utc)
 
@@ -122,6 +159,8 @@ const loading = ref(false)
 const gridData = ref([])
 const selectedIds = ref([])
 const dialogRef = ref()
+const addDialogRef = ref()
+const companySelectRef = ref()
 
 const pagination = ref({
   page: 1,
@@ -131,25 +170,47 @@ const pagination = ref({
 
 const searchForm = ref({
   filters: {
-    user_name: null,
-    real_name: null,
-    user_status: null,
+    yarn_purchase_no: null,
+    yarn_name: null,
+    yarn_color: null,
+    company_name: null,
+    company_abbreviation: null,
   },
   fuzzy_fields: {
-    user_name: null,
-    real_name: null,
+    yarn_purchase_no: null,
+    yarn_name: null,
+    yarn_color: null,
+    company_name: null,
+    company_abbreviation: null,
   },
   date_ranges: {
     add_time: [],
   },
 })
 
-const userStatusMap = ref({ 0: '管理员', 1: '员工', 2: '封禁' })
-const userStatusOptions = ref([
-  { statusValue: 0, statusLabel: '管理员' },
-  { statusValue: 1, statusLabel: '员工' },
-  { statusValue: 2, statusLabel: '封禁' },
-])
+const handleDialogSetCompany = async (submit_id, submit_label) => {
+  try {
+    await ElMessageBox.confirm('确定要设置供应商为 ' + submit_label + ' 吗？', '提示', {
+      type: 'warning',
+    })
+    const res = await knit_api.post('/api/generic/update_batch', {
+      table_name: 'knit_yarn',
+      pk_name: 'yarn_id',
+      pk_values: selectedIds.value,
+      json_data: {
+        knit_company_id: submit_id,
+      },
+    })
+    ElMessage.success(res.data.message || '设置成功')
+    selectedIds.value = []
+    fetchGrid()
+  } catch (err) {
+    if (err !== 'cancel') {
+      ElMessage.error('设置失败：' + (err.response?.data?.error || err.message))
+      console.error(err)
+    }
+  }
+}
 
 const tableHeightSet = async () => {
   await nextTick()
@@ -179,7 +240,7 @@ const fetchGrid = async () => {
   }
 
   try {
-    const res = await knit_api.post('/api/user/query', {
+    const res = await knit_api.post('/api/knit/query', {
       page: pagination.value.page,
       page_size: pagination.value.pageSize,
       filters: rawFilters,
@@ -201,13 +262,17 @@ const openDialog = (action, id = null) => {
   dialogRef.value.open(action, id)
 }
 
+const openCompanySelect = () => {
+  companySelectRef.value.open()
+}
+
+const openWeightAddInput = () => {
+  addDialogRef.value.open()
+}
+
 const formatDate = (str) => {
   return str ? dayjs.utc(str).format('YYYY/MM/DD HH:mm:ss') : ''
   //   return str ? dayjs(str).format('YYYY/MM/DD HH:mm:ss [GMT+8]') : ''
-}
-
-const formatUserStatus = (row) => {
-  return userStatusMap.value[row.user_status] || row.user_status || '-'
 }
 
 const handlePageChange = (newPage) => {
@@ -216,17 +281,17 @@ const handlePageChange = (newPage) => {
 }
 
 const handleSelectionChange = (selection) => {
-  selectedIds.value = selection.map((item) => item.user_id)
+  selectedIds.value = selection.map((item) => item.yarn_id)
 }
 
 const deleteSelected = async () => {
   try {
-    await ElMessageBox.confirm('确定要删除选中的用户吗？', '提示', {
+    await ElMessageBox.confirm('确定要删除选中的纱线采购单吗？', '提示', {
       type: 'warning',
     })
     const res = await knit_api.post('/api/generic/delete', {
-      table_name: 'sys_user',
-      pk_name: 'user_id',
+      table_name: 'knit_yarn',
+      pk_name: 'yarn_id',
       pk_values: selectedIds.value,
     })
     ElMessage.success(res.data.message || '删除成功')

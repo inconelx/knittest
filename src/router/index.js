@@ -55,24 +55,13 @@ const routes = [
           title: '出货单管理',
         },
       },
-      // {
-      //   path: '/companies/copy/:id',
-      //   name: 'CopyCompany',
-      //   component: EditCompany,
-      //   props: true,
-      // },
-      // {
-      //   path: '/companies/add',
-      //   name: 'AddCompany',
-      //   component: EditCompany,
-      //   props: true,
-      // },
-      // {
-      //   path: '/companies/edit/:id',
-      //   name: 'EditCompany',
-      //   component: EditCompany,
-      //   props: true,
-      // },
+      {
+        path: '/users',
+        component: UserList,
+        meta: {
+          title: '用户管理',
+        },
+      },
 
       // 其他子页面...
     ],

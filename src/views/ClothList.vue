@@ -135,7 +135,7 @@
       <el-table-column
         prop="delivery_status"
         label="出货状态"
-        :formatter="formatdeliveryStatus"
+        :formatter="formatDeliveryStatus"
         width="160"
         show-overflow-tooltip
       />
@@ -351,7 +351,7 @@ const formatDate = (str) => {
   //   return str ? dayjs(str).format('YYYY/MM/DD HH:mm:ss [GMT+8]') : ''
 }
 
-const formatdeliveryStatus = (row) => {
+const formatDeliveryStatus = (row) => {
   return deliveryStatusMap.value[row.delivery_status] || row.delivery_status || '-'
 }
 
