@@ -8,7 +8,7 @@
 
     <template #footer>
       <el-button @click="visible = false">取消</el-button>
-      <el-button type="primary" @click="handleSubmit(form.input_num)">保存</el-button>
+      <el-button type="primary" @click="handleSubmit()">保存</el-button>
     </template>
   </el-dialog>
 </template>
@@ -46,8 +46,8 @@ const props = defineProps({
 
 const rules = computed(() => ({
   input_num: props.emptyable
-    ? []  // 允许为空，不加 required
-    : [{ required: true, message: '请输入数值', trigger: 'blur' }]
+    ? [] // 允许为空，不加 required
+    : [{ required: true, message: '请输入数值', trigger: 'blur' }],
 }))
 
 const resetForm = () => {
@@ -64,12 +64,12 @@ const open = async () => {
   visible.value = true
 }
 
-const handleSubmit = (input_num) => {
+const handleSubmit = () => {
   formRef.value.validate(async (valid) => {
     if (!valid) return
     try {
       visible.value = false
-      emit('success', input_num) // 通知父组件刷新列表等
+      emit('success', form.value.input_num) // 通知父组件刷新列表等
     } catch (err) {
       ElMessage.error('提交失败：' + (err.response?.data?.error || err.message))
     }

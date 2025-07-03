@@ -2,11 +2,17 @@
   <div class="view_main">
     <div>
       <el-button type="primary" @click="fetchGrid">刷新</el-button>
-      <el-button type="primary" @click="openDialog('add')">新增计划单</el-button>
+      <el-button type="primary" @click="openDialog('add')">新增用户</el-button>
       <el-button type="primary" @click="resetSearch">重置筛选</el-button>
       <el-button type="danger" :disabled="selectedIds.length === 0" @click="deleteSelected">
         删除勾选
       </el-button>
+      <!-- <el-button type="danger" :disabled="selectedIds.length === 0" @click="deleteSelected">
+        勾选封禁
+      </el-button>
+      <el-button type="danger" :disabled="selectedIds.length === 0" @click="deleteSelected">
+        勾选解封
+      </el-button> -->
     </div>
 
     <div>
@@ -74,9 +80,12 @@
         :index="(index) => (pagination.page - 1) * pagination.pageSize + index + 1"
       />
       <el-table-column prop="user_id" label="ID" width="160" show-overflow-tooltip />
-      <el-table-column label="操作" width="160" show-overflow-tooltip>
+      <el-table-column label="操作" width="200" show-overflow-tooltip>
         <template #default="scope">
           <el-button size="small" @click="openDialog('edit', scope.row.user_id)">编辑</el-button>
+          <el-button size="small" @click="openpPasswordDialog(scope.row.user_id)"
+            >修改密码</el-button
+          >
         </template>
       </el-table-column>
       <el-table-column prop="user_name" label="账号" width="160" show-overflow-tooltip />
@@ -101,6 +110,7 @@
       <el-table-column prop="note" label="备注" width="320" show-overflow-tooltip />
     </el-table>
     <UserDialog ref="dialogRef" @success="fetchGrid" />
+    <PasswordDialog ref="passwordDialogRef" :title="'设置密码'" @success="passwordSet" />
   </div>
 </template>
 
@@ -111,7 +121,8 @@ import dayjs from 'dayjs'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { knit_api } from '@/utils/auth.js'
 import utc from 'dayjs/plugin/utc'
-import UserDialog from './OrderDialog.vue'
+import UserDialog from './UserDialog.vue'
+import PasswordDialog from '@/components/PasswordDialog.vue'
 
 dayjs.extend(utc)
 
@@ -122,6 +133,9 @@ const loading = ref(false)
 const gridData = ref([])
 const selectedIds = ref([])
 const dialogRef = ref()
+const passwordDialogRef = ref()
+
+const tmpRowId = ref()
 
 const pagination = ref({
   page: 1,
@@ -201,6 +215,11 @@ const openDialog = (action, id = null) => {
   dialogRef.value.open(action, id)
 }
 
+const openpPasswordDialog = (id) => {
+  tmpRowId.value = id
+  passwordDialogRef.value.open()
+}
+
 const formatDate = (str) => {
   return str ? dayjs.utc(str).format('YYYY/MM/DD HH:mm:ss') : ''
   //   return str ? dayjs(str).format('YYYY/MM/DD HH:mm:ss [GMT+8]') : ''
@@ -235,6 +254,27 @@ const deleteSelected = async () => {
   } catch (err) {
     if (err !== 'cancel') {
       ElMessage.error('删除失败：' + (err.response?.data?.error || err.message))
+      console.error(err)
+    }
+  }
+}
+
+const passwordSet = async (submit_hash) => {
+  try {
+    await ElMessageBox.confirm('确定要修改密码吗？', '提示', {
+      type: 'warning',
+    })
+    const res = await knit_api.post('/api/generic/update', {
+      table_name: 'sys_user',
+      pk_name: 'user_id',
+      pk_value: tmpRowId.value,
+      json_data: { user_password: submit_hash },
+    })
+    ElMessage.success(res.data.message || '修改成功')
+    fetchGrid()
+  } catch (err) {
+    if (err !== 'cancel') {
+      ElMessage.error('修改失败：' + (err.response?.data?.error || err.message))
       console.error(err)
     }
   }

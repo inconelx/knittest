@@ -91,10 +91,10 @@
 }
 
 .el-dialog {
-  min-width: 600px !important; /* 最大宽度也限制为100% */
+  min-width: 525px !important;
 }
 
-@media screen and (max-width: 600px) {
+@media screen and (max-width: 525px) {
   .el-dialog {
     min-width: auto !important;
     width: 100% !important;
@@ -112,11 +112,11 @@
   min-width: 320px !important;
 }
 
-.el-date-range-picker{
+.el-date-range-picker {
   width: 320px !important;
 }
 
 .el-picker-panel__body {
-  display: flex!important;
+  display: flex !important;
   flex-direction: column !important;
 }
