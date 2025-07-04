@@ -41,6 +41,7 @@
             end-placeholder="结束日期"
             format="YYYY/MM/DD"
             value-format="YYYY-MM-DD"
+            :editable="false"
           />
         </el-form-item>
       </el-form>
