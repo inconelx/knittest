@@ -1,5 +1,11 @@
 <template>
-  <el-dialog v-model="visible" :title="titleMap[mode]" width="25%" :close-on-click-modal="false">
+  <el-dialog
+    v-model="visible"
+    :title="titleMap[mode]"
+    width="25%"
+    :close-on-click-modal="false"
+    @opened="afterOpen"
+  >
     <el-form :model="form" :rules="rules" ref="formRef" label-width="auto">
       <el-form-item label="公司名称" prop="company_name">
         <el-input v-model="form.company_name" maxlength="60" />
@@ -39,7 +45,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, nextTick } from 'vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
 import { knit_api } from '@/utils/auth.js'
@@ -91,37 +97,8 @@ const open = async (action, id = null) => {
   }
   mode.value = action
   recordId.value = id
-  visible.value = true
   saveDisabled.value = true
-
-  await fetchCompanyType()
-
-  if (action === 'add') {
-    resetForm()
-  } else if (id && (action === 'copy' || action === 'edit')) {
-    try {
-      const res = await knit_api.post('/api/company/query', {
-        page: 1,
-        page_size: 1,
-        filters: {
-          company_id: id,
-        },
-      })
-      Object.keys(form.value).forEach((key) => {
-        if (Object.prototype.hasOwnProperty.call(res.data.records[0], key)) {
-          form.value[key] = res.data.records[0][key]
-        }
-      })
-      if (action === 'copy') {
-        // 去掉主键
-        recordId.value = null
-      }
-    } catch (err) {
-      ElMessage.error('加载失败：' + (err.response?.data?.error || err.message))
-      console.error(err)
-    }
-  }
-  saveDisabled.value = false
+  visible.value = true
 }
 
 const handleSubmit = () => {
@@ -160,6 +137,39 @@ const handleSubmit = () => {
       console.error(err)
     }
   })
+}
+
+const afterOpen = async () => {
+  await nextTick()
+
+  await fetchCompanyType()
+
+  if (mode.value === 'add') {
+    resetForm()
+  } else if (recordId.value !== null && (mode.value === 'copy' || mode.value === 'edit')) {
+    try {
+      const res = await knit_api.post('/api/company/query', {
+        page: 1,
+        page_size: 1,
+        filters: {
+          company_id: recordId.value,
+        },
+      })
+      Object.keys(form.value).forEach((key) => {
+        if (Object.prototype.hasOwnProperty.call(res.data.records[0], key)) {
+          form.value[key] = res.data.records[0][key]
+        }
+      })
+      if (mode.value === 'copy') {
+        // 去掉主键
+        recordId.value = null
+      }
+    } catch (err) {
+      ElMessage.error('加载失败：' + (err.response?.data?.error || err.message))
+      console.error(err)
+    }
+  }
+  saveDisabled.value = false
 }
 
 defineExpose({ open })

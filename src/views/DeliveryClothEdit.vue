@@ -6,6 +6,7 @@
     top="2%"
     :close-on-click-modal="false"
     @close="onDialogClose"
+    @opened="afterOpen"
   >
     <p>当前出货单ID: {{ delivery_info.delivery_id }}</p>
     <p>当前出货单号: {{ delivery_info.delivery_no }}</p>
@@ -126,18 +127,28 @@
       <el-table-column prop="order_cloth_add" label="空加" width="160" show-overflow-tooltip />
       <el-table-column prop="note" label="备注" width="320" show-overflow-tooltip />
     </el-table>
+    <el-button type="primary" @click="openScanner">打开扫码</el-button>
   </el-dialog>
   <ClothSelect ref="clothSelectRef" @success="handleDialogAddCloth" />
+  <el-dialog v-model="dialogVisible" title="扫码" width="525px" @closed="stopScanner">
+    <div id="qr-scanner" ref="scannerContainer" style="width: 100%"></div>
+
+    <template #footer>
+      <el-button @click="dialogVisible = false">关闭</el-button>
+      <el-button v-show="!scanning" type="primary" @click="resumeScanning">继续</el-button>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup>
-import { ref, nextTick } from 'vue'
+import { ref, nextTick, onBeforeUnmount } from 'vue'
 import axios from 'axios'
 import dayjs from 'dayjs'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { knit_api } from '@/utils/auth.js'
 import ClothSelect from './ClothSelect.vue'
 import utc from 'dayjs/plugin/utc'
+import { Html5Qrcode } from 'html5-qrcode'
 
 dayjs.extend(utc)
 
@@ -187,6 +198,122 @@ const emit = defineEmits(['close'])
 
 const titleName = '出货单布匹编辑'
 
+const dialogVisible = ref(false)
+const scanning = ref(false)
+const scannerContainer = ref(null)
+let html5QrCodeContainer = null
+
+// 打开弹窗并启动扫码
+const openScanner = async () => {
+  scanning.value = true
+  dialogVisible.value = true
+  await nextTick()
+  startScanner()
+}
+
+const startScanner = () => {
+  const config = { fps: 10, qrbox: { width: 250, height: 250 } }
+  if (!html5QrCodeContainer) {
+    html5QrCodeContainer = new Html5Qrcode('qr-scanner')
+  }
+  try {
+    html5QrCodeContainer.start({ facingMode: 'environment' }, config, onScanSuccess)
+  } catch (err) {
+    console.error('启动扫码失败:', err)
+  }
+}
+
+const stopScanner = async () => {
+  try {
+    await html5QrCodeContainer.stop()
+  } catch (err) {
+    console.error('停止扫码失败:', err)
+  }
+  await nextTick()
+  fetchGrid()
+}
+
+const resumeScanning = () => {
+  scanning.value = true
+}
+
+const onScanSuccess = async (decodedText) => {
+  if (scanning.value) {
+    scanning.value = false
+
+    const ctx = new window.AudioContext()
+    const osc = ctx.createOscillator()
+
+    let cloth_valid_type = '出货成功'
+    try {
+      const res = await knit_api.post('/api/cloth/query', {
+        page: 1,
+        page_size: 1,
+        filters: {
+          cloth_id: decodedText,
+        },
+      })
+      if (res.data.total === 0) {
+        cloth_valid_type = '布匹ID错误或不存在'
+      } else if (res.data.records[0]['cloth_delivery_id'] !== null) {
+        cloth_valid_type = '布匹已出货'
+      }
+    } catch (_) {
+      cloth_valid_type = '未知错误'
+    }
+    if (cloth_valid_type === '出货成功') {
+      try {
+        const res = await knit_api.post('/api/generic/update_batch', {
+          table_name: 'knit_cloth',
+          pk_name: 'cloth_id',
+          pk_values: [decodedText],
+          json_data: {
+            cloth_delivery_id: recordId.value,
+          },
+        })
+      } catch (_) {
+        cloth_valid_type = '更新错误'
+      }
+    }
+    if (cloth_valid_type === '出货成功') {
+      try {
+        const time_res = await knit_api.post('/api/generic/update_time_batch', {
+          table_name: 'knit_cloth',
+          pk_name: 'cloth_id',
+          pk_values: [decodedText],
+          time_field_name: 'cloth_delivery_time',
+        })
+      } catch (_) {
+        cloth_valid_type = '时间更新错误'
+      }
+    }
+    let tmp_box_type = 'success'
+    if (cloth_valid_type !== '出货成功') {
+      osc.type = 'sawtooth'
+      osc.frequency.value = 140
+      tmp_box_type = 'warning'
+    } else {
+      osc.type = 'sine'
+      osc.frequency.value = 980
+      osc.connect(ctx.destination)
+    }
+    osc.connect(ctx.destination)
+    osc.start()
+    osc.stop(ctx.currentTime + 250 / 1000)
+    await ElMessageBox.alert(cloth_valid_type, '提示', {
+      confirmButtonText: '确定',
+      type: tmp_box_type,
+      showClose: false,
+      closeOnClickModal: false,
+      closeOnPressEscape: false,
+    })
+  }
+}
+
+onBeforeUnmount(() => {
+  stopScanner()
+})
+
 const handleDialogAddCloth = async (submit_ids) => {
   try {
     await ElMessageBox.confirm('确定要新增出货布匹吗？', '提示', {
@@ -200,7 +327,13 @@ const handleDialogAddCloth = async (submit_ids) => {
         cloth_delivery_id: recordId.value,
       },
     })
-    ElMessage.success(res.data.message || '设置成功')
+    const time_res = await knit_api.post('/api/generic/update_time_batch', {
+      table_name: 'knit_cloth',
+      pk_name: 'cloth_id',
+      pk_values: submit_ids,
+      time_field_name: 'cloth_delivery_time',
+    })
+    ElMessage.success(res.data.message || time_res.data.message || '设置成功')
     selectedIds.value = []
     fetchGrid()
   } catch (err) {
@@ -295,6 +428,7 @@ const cancelSelected = async () => {
       pk_values: selectedIds.value,
       json_data: {
         cloth_delivery_id: null,
+        cloth_delivery_time: null,
       },
     })
     ElMessage.success(res.data.message || '撤销成功')
@@ -319,11 +453,13 @@ const resetSearch = () => {
 }
 
 const open = async (id) => {
-  resetSearch()
   recordId.value = id
   visible.value = true
-  
-  fetchGrid()
+}
+
+const afterOpen = async () => {
+  await nextTick()
+  resetSearch()
 }
 
 const onDialogClose = () => {

@@ -5,6 +5,7 @@
     width="75%"
     top="2%"
     :close-on-click-modal="false"
+    @opened="afterOpen"
   >
     <div>
       <el-button type="primary" @click="fetchGrid">刷新</el-button>
@@ -181,7 +182,7 @@ const titleName = '库存布匹选取'
 const tableHeightSet = async () => {
   await nextTick()
   const tableElement = tableRef.value.$el
-  console.log(tableElement)
+
   if (!tableElement) return
 
   const header = tableElement.querySelector('.el-table__header-wrapper')
@@ -250,10 +251,8 @@ const resetSearch = () => {
   fetchGrid()
 }
 
-const open = async () => {
-  resetSearch()
+const open = () => {
   visible.value = true
-  fetchGrid()
 }
 
 const handleSubmit = () => {
@@ -264,6 +263,11 @@ const handleSubmit = () => {
     ElMessage.error('获取失败：' + (err.response?.data?.error || err.message))
     console.error(err)
   }
+}
+
+const afterOpen = async () => {
+  await nextTick()
+  resetSearch()
 }
 
 defineExpose({ open })

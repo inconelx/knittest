@@ -9,7 +9,7 @@ let refreshPromise = null
 
 //针织api
 export const knit_api = axios.create({
-  baseURL: 'http://192.168.0.102:5000',
+  baseURL: 'https://192.168.0.103:5000',
   timeout: 5000,
 })
 
@@ -38,7 +38,7 @@ knit_api.interceptors.response.use(
     if (error.response && error.response.status === 401) {
       // console.warn('⛔ 登录状态失效，跳转登录页')
       const currentPath = router.currentRoute.value.path
-      if (currentPath !== '/login') {
+      if (currentPath !== '/login' && currentPath !== '/') {
         try {
           // 等待用户关闭弹窗后再跳转
           await ElMessageBox.alert(
@@ -90,8 +90,6 @@ async function refreshToken() {
 }
 
 export function initTokenRefresher() {
-  stopTokenRefresher()
-
   const expiresSeconds = parseInt(sessionStorage.getItem('expires_seconds'))
   const expiresAt = parseInt(sessionStorage.getItem('expires_at'))
 
@@ -99,22 +97,17 @@ export function initTokenRefresher() {
     // console.warn('⚠️ Cannot start token refresher: missing expiration.')
     return
   }
-
   const refreshInterval = Math.max(expiresSeconds - 60, 60)
-  // console.log(Math.floor(Date.now() / 1000))
-  // console.log(refreshInterval)
-  // console.log(Math.floor(Date.now() / 1000) + refreshInterval + 30)
-  // console.log(expiresAt)
 
   if (Math.floor(Date.now() / 1000) + 90 > expiresAt) {
     refreshToken()
+    stopTokenRefresher()
   }
-
-  refreshTimer = setInterval(async () => {
-    refreshToken()
-  }, refreshInterval * 1000)
-
-  // console.log('✅ Token refresher started.')
+  if (!refreshTimer) {
+    refreshTimer = setInterval(() => {
+      refreshToken()
+    }, refreshInterval * 1000)
+  }
 }
 
 export function stopTokenRefresher() {

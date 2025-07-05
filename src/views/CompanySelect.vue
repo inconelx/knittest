@@ -1,5 +1,11 @@
 <template>
-  <el-dialog v-model="visible" :title="titleName" width="75%" :close-on-click-modal="false">
+  <el-dialog
+    v-model="visible"
+    :title="titleName"
+    width="75%"
+    :close-on-click-modal="false"
+    @opened="afterOpen"
+  >
     <div>
       <el-button type="primary" @click="fetchGrid">刷新</el-button>
       <el-button type="primary" @click="resetSearch">重置筛选</el-button>
@@ -65,7 +71,6 @@
       border
       style="width: 100%"
       :max-height="tableHeight"
-      @selection-change="handleSelectionChange"
       scrollbar-always
     >
       <el-table-column
@@ -78,6 +83,7 @@
           <el-button
             size="small"
             @click="handleSubmit(scope.row.company_id, scope.row.company_abbreviation)"
+            :disabled="selectDisabled"
             >选取</el-button
           >
         </template>
@@ -116,6 +122,8 @@ const tableHeight = ref(null)
 
 const loading = ref(false)
 const gridData = ref([])
+
+const selectDisabled = ref(true)
 
 const visible = ref(false)
 
@@ -237,10 +245,9 @@ const resetSearch = () => {
   fetchGrid()
 }
 
-const open = async () => {
-  resetSearch()
+const open = () => {
+  selectDisabled.value = true
   visible.value = true
-  fetchGrid()
 }
 
 const handleSubmit = (select_id, select_label) => {
@@ -251,6 +258,12 @@ const handleSubmit = (select_id, select_label) => {
     ElMessage.error('获取失败：' + (err.response?.data?.error || err.message))
     console.error(err)
   }
+}
+
+const afterOpen = async () => {
+  await nextTick()
+  resetSearch()
+  selectDisabled.value = false
 }
 
 defineExpose({ open })

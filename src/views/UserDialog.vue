@@ -1,5 +1,11 @@
 <template>
-  <el-dialog v-model="visible" :title="titleMap[mode]" width="25%" :close-on-click-modal="false">
+  <el-dialog
+    v-model="visible"
+    :title="titleMap[mode]"
+    width="25%"
+    :close-on-click-modal="false"
+    @opened="afterOpen"
+  >
     <el-form :model="form" :rules="rules" ref="formRef" label-width="auto">
       <el-form-item label="账户" prop="user_name">
         <el-input v-model="form.user_name" maxlength="60" />
@@ -29,7 +35,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, nextTick } from 'vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
 import { knit_api } from '@/utils/auth.js'
@@ -72,31 +78,8 @@ const open = async (action, id = null) => {
   }
   mode.value = action
   recordId.value = id
-  visible.value = true
   saveDisabled.value = true
-
-  if (action === 'add') {
-    resetForm()
-  } else if (id && action === 'edit') {
-    try {
-      const res = await knit_api.post('/api/user/query', {
-        page: 1,
-        page_size: 1,
-        filters: {
-          user_id: id,
-        },
-      })
-      Object.keys(form.value).forEach((key) => {
-        if (Object.prototype.hasOwnProperty.call(res.data.records[0], key)) {
-          form.value[key] = res.data.records[0][key]
-        }
-      })
-    } catch (err) {
-      ElMessage.error('加载失败：' + (err.response?.data?.error || err.message))
-      console.error(err)
-    }
-  }
-  saveDisabled.value = false
+  visible.value = true
 }
 
 const handleSubmit = () => {
@@ -156,6 +139,32 @@ const passwordSet = async (submit_hash) => {
     ElMessage.error('保存失败：' + (err.response?.data?.error || err.message))
     console.error(err)
   }
+}
+
+const afterOpen = async () => {
+  await nextTick()
+  if (mode.value === 'add') {
+    resetForm()
+  } else if (recordId.value !== null && mode.value === 'edit') {
+    try {
+      const res = await knit_api.post('/api/user/query', {
+        page: 1,
+        page_size: 1,
+        filters: {
+          user_id: recordId.value,
+        },
+      })
+      Object.keys(form.value).forEach((key) => {
+        if (Object.prototype.hasOwnProperty.call(res.data.records[0], key)) {
+          form.value[key] = res.data.records[0][key]
+        }
+      })
+    } catch (err) {
+      ElMessage.error('加载失败：' + (err.response?.data?.error || err.message))
+      console.error(err)
+    }
+  }
+  saveDisabled.value = false
 }
 
 defineExpose({ open })
