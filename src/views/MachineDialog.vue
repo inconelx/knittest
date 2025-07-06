@@ -90,15 +90,13 @@ const handleSubmit = () => {
       if (mode.value === 'add' || mode.value === 'copy') {
         await knit_api.post('/api/generic/insert', {
           table_name: 'knit_machine',
-          pk_name: 'machine_id',
           json_data: input_values,
         })
         ElMessage.success('新增成功')
       } else if (mode.value === 'edit') {
         await knit_api.post('/api/generic/update', {
           table_name: 'knit_machine',
-          pk_name: 'machine_id',
-          pk_value: recordId.value,
+          pk_values: [recordId.value],
           json_data: input_values,
         })
         ElMessage.success('更新成功')

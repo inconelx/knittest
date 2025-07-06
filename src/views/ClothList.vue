@@ -115,7 +115,7 @@
         :index="(index) => (pagination.page - 1) * pagination.pageSize + index + 1"
       />
       <el-table-column prop="cloth_id" label="ID" width="160" show-overflow-tooltip />
-      <el-table-column label="操作" width="80" show-overflow-tooltip>
+      <el-table-column label="操作" width="100" show-overflow-tooltip>
         <template #default="scope">
           <el-button size="small" @click="openDialog('edit', scope.row.cloth_id)">编辑</el-button>
           <!-- <el-button size="small" @click="openDialog('copy', scope.row.cloth_id)">复制</el-button> -->
@@ -247,9 +247,8 @@ const handleDialogSetOrder = async (submit_id, submit_label) => {
     await ElMessageBox.confirm('确定要设置关联计划单为 ' + submit_label + ' 吗？', '提示', {
       type: 'warning',
     })
-    const res = await knit_api.post('/api/generic/update_batch', {
+    const res = await knit_api.post('/api/generic/update', {
       table_name: 'knit_cloth',
-      pk_name: 'cloth_id',
       pk_values: selectedIds.value,
       json_data: {
         cloth_order_id: submit_id,
@@ -271,9 +270,8 @@ const weightCorrectSet = async (submit_num) => {
     await ElMessageBox.confirm('确定要设置重量修正为 ' + submit_num + ' 吗？', '提示', {
       type: 'warning',
     })
-    const res = await knit_api.post('/api/generic/update_batch', {
+    const res = await knit_api.post('/api/generic/update', {
       table_name: 'knit_cloth',
-      pk_name: 'cloth_id',
       pk_values: selectedIds.value,
       json_data: {
         cloth_weight_correct: submit_num,
@@ -373,7 +371,6 @@ const deleteSelected = async () => {
     })
     const res = await knit_api.post('/api/generic/delete', {
       table_name: 'knit_cloth',
-      pk_name: 'cloth_id',
       pk_values: selectedIds.value,
     })
     ElMessage.success(res.data.message || '删除成功')

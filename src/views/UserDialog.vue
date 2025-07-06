@@ -100,8 +100,7 @@ const handleSubmit = () => {
         }
         await knit_api.post('/api/generic/update', {
           table_name: 'sys_user',
-          pk_name: 'user_id',
-          pk_value: recordId.value,
+          pk_values: [recordId.value],
           json_data: input_values,
         })
         ElMessage.success('更新成功')
@@ -129,7 +128,6 @@ const passwordSet = async (submit_hash) => {
     input_values['user_password'] = submit_hash
     await knit_api.post('/api/generic/insert', {
       table_name: 'sys_user',
-      pk_name: 'user_id',
       json_data: input_values,
     })
     ElMessage.success('新增成功')

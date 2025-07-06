@@ -188,9 +188,8 @@ const handleDialogSetCompany = async (submit_id, submit_label) => {
     await ElMessageBox.confirm('确定要设置关联公司为 ' + submit_label + ' 吗？', '提示', {
       type: 'warning',
     })
-    const res = await knit_api.post('/api/generic/update_batch', {
+    const res = await knit_api.post('/api/generic/update', {
       table_name: 'knit_order',
-      pk_name: 'order_id',
       pk_values: selectedIds.value,
       json_data: {
         order_custom_company_id: submit_id,
@@ -212,9 +211,8 @@ const weightAddSet = async (submit_num) => {
     await ElMessageBox.confirm('确定要设置空加为 ' + submit_num + ' 吗？', '提示', {
       type: 'warning',
     })
-    const res = await knit_api.post('/api/generic/update_batch', {
+    const res = await knit_api.post('/api/generic/update', {
       table_name: 'knit_order',
-      pk_name: 'order_id',
       pk_values: selectedIds.value,
       json_data: {
         order_cloth_add: submit_num,
@@ -310,7 +308,6 @@ const deleteSelected = async () => {
     })
     const res = await knit_api.post('/api/generic/delete', {
       table_name: 'knit_order',
-      pk_name: 'order_id',
       pk_values: selectedIds.value,
     })
     ElMessage.success(res.data.message || '删除成功')

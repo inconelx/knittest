@@ -45,17 +45,7 @@
       </el-form-item>
 
       <el-form-item label="计划单号" prop="cloth_order_id">
-        <el-select
-          v-model="form.cloth_order_id"
-          filterable
-          remote
-          reserve-keyword
-          clearable
-          placeholder="输入以搜索计划单号"
-          :remote-method="remoteSearchOrder"
-          :loading="orderLoading"
-          maxlength="60"
-        >
+        <el-select v-model="form.cloth_order_id" placeholder="" maxlength="60">
           <el-option
             v-for="item in orderOptions"
             :key="item.order_id"
@@ -149,27 +139,6 @@ const remoteSearchMachine = async (query) => {
   }
 }
 
-const remoteSearchOrder = async (query) => {
-  if (query === null || query === undefined) {
-    orderOptions.value = []
-    return
-  }
-  orderLoading.value = true
-  try {
-    const res = await knit_api.post('/api/order/search', {
-      size: 10,
-      keyword: query,
-    })
-    orderOptions.value = res.data
-  } catch (err) {
-    ElMessage.error('搜索失败：' + (err.response?.data?.error || err.message))
-    console.error(err)
-    orderOptions.value = []
-  } finally {
-    orderLoading.value = false
-  }
-}
-
 const handleMachineChange = (val) => {
   const matched = orderOptions.value.find((item) => item.machine_id === val)
   form.value.cloth_order_id = matched ? matched.order_id : null
@@ -199,15 +168,13 @@ const handleSubmit = () => {
         }
       }
       if (mode.value === 'add') {
-        await knit_api.post('/api/generic/insert', {
-          table_name: 'knit_cloth',
+        await knit_api.post('/api/employee/cloth/add', {
           json_data: input_values,
         })
         ElMessage.success('新增成功')
       } else if (mode.value === 'edit') {
-        await knit_api.post('/api/generic/update', {
-          table_name: 'knit_cloth',
-          pk_values: [recordId.value],
+        await knit_api.post('/api/employee/cloth/update', {
+          pk_value: recordId.value,
           json_data: input_values,
         })
         ElMessage.success('更新成功')
@@ -223,7 +190,7 @@ const handleSubmit = () => {
 
 const afterOpen = async () => {
   await nextTick()
-  
+
   machineOptions.value = []
   orderOptions.value = []
 
@@ -231,7 +198,7 @@ const afterOpen = async () => {
     resetForm()
   } else if (recordId.value !== null && mode.value === 'edit') {
     try {
-      const res = await knit_api.post('/api/cloth/query', {
+      const res = await knit_api.post('/api/employee/cloth/query', {
         page: 1,
         page_size: 1,
         filters: {

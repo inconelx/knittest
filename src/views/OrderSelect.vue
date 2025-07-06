@@ -70,7 +70,7 @@
         :index="(index) => (pagination.page - 1) * pagination.pageSize + index + 1"
       />
       <el-table-column prop="order_id" label="ID" width="160" show-overflow-tooltip />
-      <el-table-column label="操作" width="80" show-overflow-tooltip>
+      <el-table-column label="操作" width="100" show-overflow-tooltip>
         <template #default="scope">
           <el-button
             size="small"

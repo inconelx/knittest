@@ -246,7 +246,6 @@ const deleteSelected = async () => {
     })
     const res = await knit_api.post('/api/generic/delete', {
       table_name: 'sys_user',
-      pk_name: 'user_id',
       pk_values: selectedIds.value,
     })
     ElMessage.success(res.data.message || '删除成功')
@@ -267,8 +266,7 @@ const passwordSet = async (submit_hash) => {
     })
     const res = await knit_api.post('/api/generic/update', {
       table_name: 'sys_user',
-      pk_name: 'user_id',
-      pk_value: tmpRowId.value,
+      pk_values: [tmpRowId.value],
       json_data: { user_password: submit_hash },
     })
     ElMessage.success(res.data.message || '修改成功')

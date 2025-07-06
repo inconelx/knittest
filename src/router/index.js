@@ -7,6 +7,7 @@ import CompanyList from '@/views/CompanyList.vue'
 import MachineList from '@/views/MachineList.vue'
 import OrderList from '@/views/OrderList.vue'
 import ClothList from '@/views/ClothList.vue'
+import EmployeeClothList from '@/views/EmployeeClothList.vue'
 import DeliveryList from '@/views/DeliveryList.vue'
 import { initTokenRefresher, knit_api, stopTokenRefresher } from '@/utils/auth.js'
 import axios from 'axios'
@@ -46,6 +47,13 @@ const routes = [
         component: ClothList,
         meta: {
           title: '布匹管理',
+        },
+      },
+      {
+        path: '/emloyeeclothes',
+        component: EmployeeClothList,
+        meta: {
+          title: '员工布匹录入',
         },
       },
       {

@@ -132,10 +132,8 @@
   <ClothSelect ref="clothSelectRef" @success="handleDialogAddCloth" />
   <el-dialog v-model="dialogVisible" title="扫码" width="525px" @closed="stopScanner">
     <div id="qr-scanner" ref="scannerContainer" style="width: 100%"></div>
-
     <template #footer>
       <el-button @click="dialogVisible = false">关闭</el-button>
-      <el-button v-show="!scanning" type="primary" @click="resumeScanning">继续</el-button>
     </template>
   </el-dialog>
 </template>
@@ -148,7 +146,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { knit_api } from '@/utils/auth.js'
 import ClothSelect from './ClothSelect.vue'
 import utc from 'dayjs/plugin/utc'
-import { Html5Qrcode } from 'html5-qrcode'
+import { Html5Qrcode, Html5QrcodeScannerState } from 'html5-qrcode'
 
 dayjs.extend(utc)
 
@@ -199,119 +197,95 @@ const emit = defineEmits(['close'])
 const titleName = '出货单布匹编辑'
 
 const dialogVisible = ref(false)
-const scanning = ref(false)
 const scannerContainer = ref(null)
-let html5QrCodeContainer = null
+let qrcode_scanner = null
 
 // 打开弹窗并启动扫码
 const openScanner = async () => {
-  scanning.value = true
   dialogVisible.value = true
   await nextTick()
   startScanner()
 }
 
 const startScanner = () => {
-  const config = { fps: 10, qrbox: { width: 250, height: 250 } }
-  if (!html5QrCodeContainer) {
-    html5QrCodeContainer = new Html5Qrcode('qr-scanner')
+  const config = { fps: 4, qrbox: { width: 200, height: 200 } }
+  if (!qrcode_scanner || qrcode_scanner.getState() === Html5QrcodeScannerState.UNKNOWN) {
+    qrcode_scanner = new Html5Qrcode('qr-scanner')
   }
   try {
-    html5QrCodeContainer.start({ facingMode: 'environment' }, config, onScanSuccess)
+    qrcode_scanner.start({ facingMode: 'environment' }, config, onScanSuccess)
   } catch (err) {
-    console.error('启动扫码失败:', err)
+    console.error('启动扫码器失败:', err)
   }
 }
 
-const stopScanner = async () => {
+const stopScanner = () => {
   try {
-    await html5QrCodeContainer.stop()
+    qrcode_scanner.stop()
   } catch (err) {
-    console.error('停止扫码失败:', err)
+    console.error('停止扫码器失败:', err)
   }
-  await nextTick()
   fetchGrid()
 }
 
-const resumeScanning = () => {
-  scanning.value = true
-}
-
 const onScanSuccess = async (decodedText) => {
-  if (scanning.value) {
-    scanning.value = false
+  await qrcode_scanner.pause(true)
+  let cloth_valid_type = '出货成功'
 
-    const ctx = new window.AudioContext()
-    const osc = ctx.createOscillator()
-
-    let cloth_valid_type = '出货成功'
-    try {
-      const res = await knit_api.post('/api/cloth/query', {
-        page: 1,
-        page_size: 1,
-        filters: {
-          cloth_id: decodedText,
-        },
-      })
-      if (res.data.total === 0) {
-        cloth_valid_type = '布匹ID错误或不存在'
-      } else if (res.data.records[0]['cloth_delivery_id'] !== null) {
-        cloth_valid_type = '布匹已出货'
-      }
-    } catch (_) {
-      cloth_valid_type = '未知错误'
-    }
-    if (cloth_valid_type === '出货成功') {
-      try {
-        const res = await knit_api.post('/api/generic/update_batch', {
-          table_name: 'knit_cloth',
-          pk_name: 'cloth_id',
-          pk_values: [decodedText],
-          json_data: {
-            cloth_delivery_id: recordId.value,
-          },
-        })
-      } catch (_) {
-        cloth_valid_type = '更新错误'
-      }
-    }
-    if (cloth_valid_type === '出货成功') {
-      try {
-        const time_res = await knit_api.post('/api/generic/update_time_batch', {
-          table_name: 'knit_cloth',
-          pk_name: 'cloth_id',
-          pk_values: [decodedText],
-          time_field_name: 'cloth_delivery_time',
-        })
-      } catch (_) {
-        cloth_valid_type = '时间更新错误'
-      }
-    }
-    let tmp_box_type = 'success'
-    if (cloth_valid_type !== '出货成功') {
-      osc.type = 'sawtooth'
-      osc.frequency.value = 140
-      tmp_box_type = 'warning'
-    } else {
-      osc.type = 'sine'
-      osc.frequency.value = 980
-      osc.connect(ctx.destination)
-    }
-    osc.connect(ctx.destination)
-    osc.start()
-    osc.stop(ctx.currentTime + 250 / 1000)
-    await ElMessageBox.alert(cloth_valid_type, '提示', {
-      confirmButtonText: '确定',
-      type: tmp_box_type,
-      showClose: false,
-      closeOnClickModal: false,
-      closeOnPressEscape: false,
+  try {
+    const res = await knit_api.post('/api/delivery/cloth/update', {
+      delivery_id: recordId.value,
+      cloth_operate: 'out',
+      pk_values: [decodedText],
     })
+  } catch (error) {
+    if (error.response?.data['errorType'] === 0) {
+      cloth_valid_type = '出货失败，错误的请求'
+    } else if (error.response?.data['errorType'] === 1) {
+      cloth_valid_type = '出货失败，布匹ID错误或不存在'
+    } else if (error.response?.data['errorType'] === 2) {
+      cloth_valid_type = '出货失败，此布匹已出货'
+    } else {
+      cloth_valid_type = '出货失败，未知错误'
+    }
   }
+  if (cloth_valid_type === '出货成功') {
+    fetchGrid()
+  }
+  let tmp_box_type = 'success'
+  const ctx = new window.AudioContext()
+  const osc = ctx.createOscillator()
+  const gainNode = ctx.createGain()
+  gainNode.gain.value = 2
+  if (cloth_valid_type === '出货成功') {
+    osc.type = 'sine'
+    osc.frequency.value = 980
+  } else {
+    osc.type = 'sawtooth'
+    osc.frequency.value = 140
+    tmp_box_type = 'warning'
+  }
+  osc.connect(gainNode)
+  gainNode.connect(ctx.destination)
+  // osc.connect(ctx.destination)
+  osc.start()
+  osc.stop(ctx.currentTime + 0.25)
+  await ElMessageBox.alert(cloth_valid_type, '提示', {
+    confirmButtonText: '继续',
+    type: tmp_box_type,
+    showClose: false,
+    closeOnClickModal: false,
+    closeOnPressEscape: false,
+  })
+  await qrcode_scanner.resume()
 }
 
 onBeforeUnmount(() => {
-  stopScanner()
+  try {
+    qrcode_scanner.clear()
+  } catch (err) {
+    console.error('清除扫码器失败:', err)
+  }
 })
 
 const handleDialogAddCloth = async (submit_ids) => {
@@ -319,21 +293,12 @@ const handleDialogAddCloth = async (submit_ids) => {
     await ElMessageBox.confirm('确定要新增出货布匹吗？', '提示', {
       type: 'warning',
     })
-    const res = await knit_api.post('/api/generic/update_batch', {
-      table_name: 'knit_cloth',
-      pk_name: 'cloth_id',
+    const res = await knit_api.post('/api/delivery/cloth/update', {
+      delivery_id: recordId.value,
+      cloth_operate: 'out',
       pk_values: submit_ids,
-      json_data: {
-        cloth_delivery_id: recordId.value,
-      },
     })
-    const time_res = await knit_api.post('/api/generic/update_time_batch', {
-      table_name: 'knit_cloth',
-      pk_name: 'cloth_id',
-      pk_values: submit_ids,
-      time_field_name: 'cloth_delivery_time',
-    })
-    ElMessage.success(res.data.message || time_res.data.message || '设置成功')
+    ElMessage.success(res.data.message || '设置成功')
     selectedIds.value = []
     fetchGrid()
   } catch (err) {
@@ -422,14 +387,10 @@ const cancelSelected = async () => {
     await ElMessageBox.confirm('确定要将选中布匹从出货单撤销吗？', '提示', {
       type: 'warning',
     })
-    const res = await knit_api.post('/api/generic/update_batch', {
-      table_name: 'knit_cloth',
-      pk_name: 'cloth_id',
+    const res = await knit_api.post('/api/delivery/cloth/update', {
+      delivery_id: recordId.value,
+      cloth_operate: 'cancel',
       pk_values: selectedIds.value,
-      json_data: {
-        cloth_delivery_id: null,
-        cloth_delivery_time: null,
-      },
     })
     ElMessage.success(res.data.message || '撤销成功')
     selectedIds.value = []

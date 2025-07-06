@@ -161,9 +161,8 @@ const handleDialogSetCompany = async (submit_id, submit_label) => {
     await ElMessageBox.confirm('确定要设置关联公司为 ' + submit_label + ' 吗？', '提示', {
       type: 'warning',
     })
-    const res = await knit_api.post('/api/generic/update_batch', {
+    const res = await knit_api.post('/api/generic/update', {
       table_name: 'knit_delivery',
-      pk_name: 'delivery_id',
       pk_values: selectedIds.value,
       json_data: {
         delivery_company_id: submit_id,
@@ -259,7 +258,6 @@ const deleteSelected = async () => {
     })
     const res = await knit_api.post('/api/generic/delete', {
       table_name: 'knit_delivery',
-      pk_name: 'delivery_id',
       pk_values: selectedIds.value,
     })
     ElMessage.success(res.data.message || '删除成功')

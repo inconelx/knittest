@@ -9,7 +9,7 @@ let refreshPromise = null
 
 //针织api
 export const knit_api = axios.create({
-  baseURL: 'https://192.168.0.103:5000',
+  baseURL: 'https://localhost:5000',
   timeout: 5000,
 })
 
@@ -97,16 +97,11 @@ export function initTokenRefresher() {
     // console.warn('⚠️ Cannot start token refresher: missing expiration.')
     return
   }
-  const refreshInterval = Math.max(expiresSeconds - 60, 60)
 
-  if (Math.floor(Date.now() / 1000) + 90 > expiresAt) {
-    refreshToken()
-    stopTokenRefresher()
-  }
-  if (!refreshTimer) {
-    refreshTimer = setInterval(() => {
+  if (refreshTimer === null) {
+    refreshTimer = setInterval(async () => {
       refreshToken()
-    }, refreshInterval * 1000)
+    }, Math.max(expiresSeconds - 60, 60) * 1000)
   }
 }
 
