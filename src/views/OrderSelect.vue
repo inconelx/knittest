@@ -1,11 +1,5 @@
 <template>
-  <el-dialog
-    v-model="visible"
-    :title="titleName"
-    width="75%"
-    :close-on-click-modal="false"
-    @opened="afterOpen"
-  >
+  <el-dialog v-model="visible" :title="titleName" width="75%" :close-on-click-modal="false">
     <div>
       <el-button type="primary" @click="fetchGrid">刷新</el-button>
       <el-button type="primary" @click="resetSearch">重置筛选</el-button>
@@ -228,19 +222,29 @@ const formatDate = (str) => {
   //   return str ? dayjs(str).format('YYYY/MM/DD HH:mm:ss [GMT+8]') : ''
 }
 
-const resetSearch = () => {
+const resetSearch = async () => {
   for (const key in searchForm.value.filters) {
     searchForm.value.filters[key] = null
   }
   for (const key in searchForm.value.date_ranges) {
     searchForm.value.date_ranges[key] = []
   }
-  fetchGrid()
+  await fetchGrid()
 }
 
-const open = () => {
+const open = async () => {
+  for (const key in searchForm.value.filters) {
+    searchForm.value.filters[key] = null
+  }
+  for (const key in searchForm.value.date_ranges) {
+    searchForm.value.date_ranges[key] = []
+  }
+  gridData.value = null
   selectDisabled.value = true
   visible.value = true
+  await nextTick()
+  await fetchGrid()
+  selectDisabled.value = false
 }
 
 const handleSubmit = (select_id, select_label) => {
@@ -251,12 +255,6 @@ const handleSubmit = (select_id, select_label) => {
     ElMessage.error('保存失败：' + (err.response?.data?.error || err.message))
     console.error(err)
   }
-}
-
-const afterOpen = async () => {
-  await nextTick()
-  resetSearch()
-  selectDisabled.value = false
 }
 
 defineExpose({ open })

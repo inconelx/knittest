@@ -1,11 +1,5 @@
 <template>
-  <el-dialog
-    v-model="visible"
-    :title="titleMap[mode]"
-    width="25%"
-    :close-on-click-modal="false"
-    @opened="afterOpen"
-  >
+  <el-dialog v-model="visible" :title="titleMap[mode]" width="25%" :close-on-click-modal="false">
     <p v-if="mode === 'edit'">布匹ID：{{ recordId }}</p>
     <el-form :model="form" :rules="rules" ref="formRef" label-width="auto">
       <el-form-item label="机台号" prop="cloth_machine_id">
@@ -151,51 +145,15 @@ const open = async (action, id = null) => {
   mode.value = action
   recordId.value = id
   saveDisabled.value = true
-  visible.value = true
-}
-
-const handleSubmit = () => {
-  formRef.value.validate(async (valid) => {
-    if (!valid) return
-    try {
-      const input_values = {}
-      for (const key in form.value) {
-        const value = form.value[key]
-        if (value !== null && value !== undefined && value !== '') {
-          input_values[key] = value
-        } else {
-          input_values[key] = null
-        }
-      }
-      if (mode.value === 'add') {
-        await knit_api.post('/api/employee/cloth/add', {
-          json_data: input_values,
-        })
-        ElMessage.success('新增成功')
-      } else if (mode.value === 'edit') {
-        await knit_api.post('/api/employee/cloth/update', {
-          pk_value: recordId.value,
-          json_data: input_values,
-        })
-        ElMessage.success('更新成功')
-      }
-      visible.value = false
-      emit('success') // 通知父组件刷新列表等
-    } catch (err) {
-      ElMessage.error('保存失败：' + (err.response?.data?.error || err.message))
-      console.error(err)
-    }
-  })
-}
-
-const afterOpen = async () => {
-  await nextTick()
-
+  
   machineOptions.value = []
   orderOptions.value = []
 
+  resetForm()
+  await nextTick()
+  visible.value = true
+
   if (mode.value === 'add') {
-    resetForm()
   } else if (recordId.value !== null && mode.value === 'edit') {
     try {
       const res = await knit_api.post('/api/employee/cloth/query', {
@@ -232,6 +190,40 @@ const afterOpen = async () => {
     }
   }
   saveDisabled.value = false
+}
+
+const handleSubmit = () => {
+  formRef.value.validate(async (valid) => {
+    if (!valid) return
+    try {
+      const input_values = {}
+      for (const key in form.value) {
+        const value = form.value[key]
+        if (value !== null && value !== undefined && value !== '') {
+          input_values[key] = value
+        } else {
+          input_values[key] = null
+        }
+      }
+      if (mode.value === 'add') {
+        await knit_api.post('/api/employee/cloth/add', {
+          json_data: input_values,
+        })
+        ElMessage.success('新增成功')
+      } else if (mode.value === 'edit') {
+        await knit_api.post('/api/employee/cloth/update', {
+          pk_value: recordId.value,
+          json_data: input_values,
+        })
+        ElMessage.success('更新成功')
+      }
+      visible.value = false
+      emit('success') // 通知父组件刷新列表等
+    } catch (err) {
+      ElMessage.error('保存失败：' + (err.response?.data?.error || err.message))
+      console.error(err)
+    }
+  })
 }
 
 defineExpose({ open })

@@ -1,11 +1,5 @@
 <template>
-  <el-dialog
-    v-model="visible"
-    :title="titleMap[mode]"
-    width="50%"
-    :close-on-click-modal="false"
-    @opened="afterOpen"
-  >
+  <el-dialog v-model="visible" :title="titleMap[mode]" width="50%" :close-on-click-modal="false">
     <el-form :model="form" :rules="rules" ref="formRef" label-width="auto">
       <el-row :gutter="20">
         <el-col :span="12">
@@ -154,7 +148,46 @@ const open = async (action, id = null) => {
   mode.value = action
   recordId.value = id
   saveDisabled.value = true
+
+  companyOptions.value = []
+
+  resetForm()
+  await nextTick()
   visible.value = true
+
+  if (mode.value === 'add') {
+  } else if (recordId.value !== null && (mode.value === 'copy' || mode.value === 'edit')) {
+    try {
+      const res = await knit_api.post('/api/order/query', {
+        page: 1,
+        page_size: 1,
+        filters: {
+          order_id: recordId.value,
+        },
+      })
+      if (res.data.records[0]['order_custom_company_id']) {
+        companyOptions.value = [
+          {
+            company_id: res.data.records[0]['order_custom_company_id'],
+            company_abbreviation: res.data.records[0]['company_abbreviation'],
+          },
+        ]
+      }
+      Object.keys(form.value).forEach((key) => {
+        if (Object.prototype.hasOwnProperty.call(res.data.records[0], key)) {
+          form.value[key] = res.data.records[0][key]
+        }
+      })
+      if (mode.value === 'copy') {
+        // 去掉主键
+        recordId.value = null
+      }
+    } catch (err) {
+      ElMessage.error('加载失败：' + (err.response?.data?.error || err.message))
+      console.error(err)
+    }
+  }
+  saveDisabled.value = false
 }
 
 const handleSubmit = () => {
@@ -192,46 +225,6 @@ const handleSubmit = () => {
       console.error(err)
     }
   })
-}
-
-const afterOpen = async () => {
-  await nextTick()
-  companyOptions.value = []
-
-  if (mode.value === 'add') {
-    resetForm()
-  } else if (recordId.value !== null && (mode.value === 'copy' || mode.value === 'edit')) {
-    try {
-      const res = await knit_api.post('/api/order/query', {
-        page: 1,
-        page_size: 1,
-        filters: {
-          order_id: recordId.value,
-        },
-      })
-      if (res.data.records[0]['order_custom_company_id']) {
-        companyOptions.value = [
-          {
-            company_id: res.data.records[0]['order_custom_company_id'],
-            company_abbreviation: res.data.records[0]['company_abbreviation'],
-          },
-        ]
-      }
-      Object.keys(form.value).forEach((key) => {
-        if (Object.prototype.hasOwnProperty.call(res.data.records[0], key)) {
-          form.value[key] = res.data.records[0][key]
-        }
-      })
-      if (mode.value === 'copy') {
-        // 去掉主键
-        recordId.value = null
-      }
-    } catch (err) {
-      ElMessage.error('加载失败：' + (err.response?.data?.error || err.message))
-      console.error(err)
-    }
-  }
-  saveDisabled.value = false
 }
 
 defineExpose({ open })

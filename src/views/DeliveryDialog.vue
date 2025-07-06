@@ -1,11 +1,5 @@
 <template>
-  <el-dialog
-    v-model="visible"
-    :title="titleMap[mode]"
-    width="25%"
-    :close-on-click-modal="false"
-    @opened="afterOpen"
-  >
+  <el-dialog v-model="visible" :title="titleMap[mode]" width="25%" :close-on-click-modal="false">
     <el-form :model="form" :rules="rules" ref="formRef" label-width="auto">
       <el-form-item label="出货单号" prop="delivery_no">
         <el-input v-model="form.delivery_no" maxlength="60" />
@@ -119,7 +113,40 @@ const open = async (action, id = null) => {
   mode.value = action
   recordId.value = id
   saveDisabled.value = true
+
+  resetForm()
+  await nextTick()
   visible.value = true
+
+  if (mode.value === 'add') {
+  } else if (recordId.value !== null && mode.value === 'edit') {
+    try {
+      const res = await knit_api.post('/api/delivery/query', {
+        page: 1,
+        page_size: 1,
+        filters: {
+          delivery_id: recordId.value,
+        },
+      })
+      if (res.data.records[0]['delivery_company_id']) {
+        companyOptions.value = [
+          {
+            company_id: res.data.records[0]['delivery_company_id'],
+            company_abbreviation: res.data.records[0]['company_abbreviation'],
+          },
+        ]
+      }
+      Object.keys(form.value).forEach((key) => {
+        if (Object.prototype.hasOwnProperty.call(res.data.records[0], key)) {
+          form.value[key] = res.data.records[0][key]
+        }
+      })
+    } catch (err) {
+      ElMessage.error('加载失败：' + (err.response?.data?.error || err.message))
+      console.error(err)
+    }
+  }
+  saveDisabled.value = false
 }
 
 const handleSubmit = () => {
@@ -156,40 +183,6 @@ const handleSubmit = () => {
       console.error(err)
     }
   })
-}
-
-const afterOpen = async () => {
-  await nextTick()
-  if (mode.value === 'add') {
-    resetForm()
-  } else if (recordId.value !== null && mode.value === 'edit') {
-    try {
-      const res = await knit_api.post('/api/delivery/query', {
-        page: 1,
-        page_size: 1,
-        filters: {
-          delivery_id: recordId.value,
-        },
-      })
-      if (res.data.records[0]['delivery_company_id']) {
-        companyOptions.value = [
-          {
-            company_id: res.data.records[0]['delivery_company_id'],
-            company_abbreviation: res.data.records[0]['company_abbreviation'],
-          },
-        ]
-      }
-      Object.keys(form.value).forEach((key) => {
-        if (Object.prototype.hasOwnProperty.call(res.data.records[0], key)) {
-          form.value[key] = res.data.records[0][key]
-        }
-      })
-    } catch (err) {
-      ElMessage.error('加载失败：' + (err.response?.data?.error || err.message))
-      console.error(err)
-    }
-  }
-  saveDisabled.value = false
 }
 
 defineExpose({ open })

@@ -6,7 +6,6 @@
     top="2%"
     :close-on-click-modal="false"
     @close="onDialogClose"
-    @opened="afterOpen"
   >
     <p>当前出货单ID: {{ delivery_info.delivery_id }}</p>
     <p>当前出货单号: {{ delivery_info.delivery_no }}</p>
@@ -403,24 +402,28 @@ const cancelSelected = async () => {
   }
 }
 
-const resetSearch = () => {
+const resetSearch = async () => {
   for (const key in searchForm.value.filters) {
     searchForm.value.filters[key] = null
   }
   for (const key in searchForm.value.date_ranges) {
     searchForm.value.date_ranges[key] = []
   }
-  fetchGrid()
+  await fetchGrid()
 }
 
 const open = async (id) => {
+  for (const key in searchForm.value.filters) {
+    searchForm.value.filters[key] = null
+  }
+  for (const key in searchForm.value.date_ranges) {
+    searchForm.value.date_ranges[key] = []
+  }
+  gridData.value = null
   recordId.value = id
   visible.value = true
-}
-
-const afterOpen = async () => {
   await nextTick()
-  resetSearch()
+  await fetchGrid()
 }
 
 const onDialogClose = () => {
