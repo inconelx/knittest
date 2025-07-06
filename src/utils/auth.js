@@ -72,7 +72,7 @@ async function refreshToken() {
     try {
       const res = await knit_api.post('/api/refresh-token')
       sessionStorage.setItem('token', res.data.token)
-      sessionStorage.setItem('expires_at', res.data.expires_at)
+      sessionStorage.setItem('refresh_at', Math.floor(Date.now() / 1000))
       sessionStorage.setItem('expires_seconds', res.data.expires_seconds)
       sessionStorage.setItem('user_name', res.data.user_name)
       // console.log('🔁 Token refreshed successfully.')
@@ -91,17 +91,28 @@ async function refreshToken() {
 
 export function initTokenRefresher() {
   const expiresSeconds = parseInt(sessionStorage.getItem('expires_seconds'))
-  const expiresAt = parseInt(sessionStorage.getItem('expires_at'))
+  const refreshAt = parseInt(sessionStorage.getItem('refresh_at'))
 
-  if (!expiresSeconds || !expiresAt) {
+  if (!expiresSeconds || !refreshAt) {
     // console.warn('⚠️ Cannot start token refresher: missing expiration.')
     return
   }
 
+  if (
+    Math.floor(Date.now() / 1000) + Math.floor(expiresSeconds / 2) >=
+    refreshAt + expiresSeconds
+  ) {
+    refreshToken()
+    stopTokenRefresher()
+  }
+
   if (refreshTimer === null) {
-    refreshTimer = setInterval(async () => {
-      refreshToken()
-    }, Math.max(expiresSeconds - 60, 60) * 1000)
+    refreshTimer = setInterval(
+      async () => {
+        refreshToken()
+      },
+      Math.max(Math.floor(expiresSeconds / 2), 60) * 1000,
+    )
   }
 }
 

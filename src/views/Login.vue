@@ -47,10 +47,10 @@ const handleLogin = async () => {
       user_password_encrypted: encryptor.encrypt(form.value.user_password),
     })
     sessionStorage.setItem('token', res.data.token)
-    sessionStorage.setItem('expires_at', res.data.expires_at)
+    sessionStorage.setItem('refresh_at', Math.floor(Date.now() / 1000))
     sessionStorage.setItem('expires_seconds', res.data.expires_seconds)
     sessionStorage.setItem('user_name', res.data.user_name)
-    // initTokenRefresher()
+    initTokenRefresher()
     router.push('/')
   } catch (err) {
     error.value = err.response?.data?.error || err.message || '登录失败'
