@@ -35,6 +35,7 @@
         <div class="right-content">
           <span>当前用户：{{ userName }}</span>
           <el-button type="danger" size="small" @click="logout">退出登录</el-button>
+          <el-button @click="testPrint">测试打印</el-button>
         </div>
       </el-header>
       <el-main style="height: 100%">
@@ -77,6 +78,12 @@ const logout = async () => {
   await knit_api.post('/api/logout')
   stopTokenRefresher()
   router.push('/login')
+}
+
+const testPrint = async () => {
+  await knit_api.post('/api/send_print', {
+    user_name: '1234',
+  })
 }
 </script>
 <style scoped>

@@ -16,6 +16,7 @@
     <div>
       <el-button type="primary" @click="fetchGrid">刷新</el-button>
       <el-button type="primary" @click="resetSearch">重置筛选</el-button>
+      <el-button type="primary" @click="openScanner">打开扫码</el-button>
       <el-button type="primary" @click="openClothSelect">新增出货布匹</el-button>
       <el-button type="danger" :disabled="selectedIds.length === 0" @click="cancelSelected">
         撤销勾选布匹
@@ -126,7 +127,6 @@
       <el-table-column prop="order_cloth_add" label="空加" width="160" show-overflow-tooltip />
       <el-table-column prop="note" label="备注" width="320" show-overflow-tooltip />
     </el-table>
-    <el-button type="primary" @click="openScanner">打开扫码</el-button>
   </el-dialog>
   <ClothSelect ref="clothSelectRef" @success="handleDialogAddCloth" />
   <el-dialog v-model="dialogVisible" title="扫码" width="525px" @closed="stopScanner">

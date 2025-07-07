@@ -44,7 +44,7 @@ const handleLogin = async () => {
 
     const res = await knit_api.post('/api/login', {
       user_name: form.value.user_name,
-      user_password_encrypted: encryptor.encrypt(form.value.user_password),
+      user_password: encryptor.encrypt(form.value.user_password),
     })
     sessionStorage.setItem('token', res.data.token)
     sessionStorage.setItem('refresh_at', Math.floor(Date.now() / 1000))
