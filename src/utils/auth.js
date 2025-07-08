@@ -9,8 +9,8 @@ let refreshPromise = null
 
 //针织api
 export const knit_api = axios.create({
-  baseURL: 'https://192.168.0.104:5000',
-  // baseURL: 'http://localhost:5000',
+  // baseURL: 'https://192.168.0.104:5000',
+  baseURL: 'http://localhost:5000',
   timeout: 5000,
 })
 

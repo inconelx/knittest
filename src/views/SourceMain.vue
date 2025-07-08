@@ -81,8 +81,8 @@ const logout = async () => {
 }
 
 const testPrint = async () => {
-  await knit_api.post('/api/send_print', {
-    user_name: '1234',
+  await knit_api.post('/api/send-print', {
+    msg: '1234',
   })
 }
 </script>
