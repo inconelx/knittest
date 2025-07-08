@@ -3,20 +3,22 @@
     <el-card class="login-card">
       <h3 style="text-align: center">用户登录</h3>
       <br />
-      <el-form :model="form" @submit.prevent="handleLogin" label-width="auto">
-        <el-form-item label="用户名" style="width: 100%">
+      <el-form :model="form" label-width="auto">
+        <el-form-item label="用户名" prop="user_name" style="width: 100%">
           <el-input v-model="form.user_name" maxlength="30" />
         </el-form-item>
-        <el-form-item label="密码" style="width: 100%">
+        <el-form-item label="密码" prop="user_password" style="width: 100%">
           <el-input v-model="form.user_password" show-password maxlength="20" />
         </el-form-item>
         <el-form-item style="width: 100%">
           <div style="width: 100%; display: flex; justify-content: flex-end">
-            <el-button type="primary" @click="handleLogin">登录</el-button>
+            <el-button type="primary" @click="startLogin" :disabled="loading || connected"
+              >登录</el-button
+            >
           </div>
         </el-form-item>
       </el-form>
-      <el-alert v-if="error" :title="error" type="error" show-icon />
+      <el-alert v-if="message" :title="message" type="error" show-icon />
     </el-card>
   </div>
 </template>
@@ -26,36 +28,83 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 import { initTokenRefresher, knit_api } from '@/utils/auth.js'
-import JSEncrypt from 'jsencrypt'
+import forge from 'node-forge'
+import { io } from 'socket.io-client'
+
+const public_key = ref()
 
 const router = useRouter()
 const form = ref({
   user_name: '',
   user_password: '',
 })
-const error = ref('')
+const message = ref('')
+const success = ref(false)
+const loading = ref(false)
+const connected = ref(false)
 
-const handleLogin = async () => {
-  error.value = ''
-  try {
-    const public_key = (await knit_api.get('/api/public_key')).data.public_key
-    const encryptor = new JSEncrypt()
-    encryptor.setPublicKey(public_key)
+let socket = null
 
-    const res = await knit_api.post('/api/login', {
-      user_name: form.value.user_name,
-      user_password: encryptor.encrypt(form.value.user_password),
-    })
-    sessionStorage.setItem('token', res.data.token)
+const startLogin = () => {
+  loading.value = true
+  message.value = ''
+  success.value = false
+
+  // 建立 Socket.IO 连接
+  socket = io('https://192.168.0.104:5000', { transports: ['websocket'] })
+
+  socket.on('connect', () => {
+    connected.value = true
+    console.log('✅ 连接成功，等待公钥...')
+  })
+
+  socket.on('disconnect', () => {
+    connected.value = false
+    loading.value = false
+    console.log('❌ 连接断开')
+  })
+
+  socket.on('auth_public_key', async (data) => {
+    const public_key = data.key
+    console.log('收到公钥，开始加密密码...')
+    try {
+      const publicKey = forge.pki.publicKeyFromPem(public_key)
+      // 用 OAEP + SHA-256 加密
+      const encryptedBytes = publicKey.encrypt(form.value.user_password, 'RSA-OAEP', {
+        md: forge.md.sha256.create(),
+        mgf1: {
+          md: forge.md.sha256.create(),
+        },
+      })
+
+      // 发起登录请求
+      socket.emit('auth_request', {
+        user_name: form.value.user_name,
+        user_password: forge.util.encode64(encryptedBytes),
+      })
+    } catch (e) {
+      message.value = '加密失败: ' + e.message
+      loading.value = false
+    }
+  })
+
+  socket.on('auth_success', (data) => {
+    success.value = true
+    message.value = ''
+    sessionStorage.setItem('token', data.token)
     sessionStorage.setItem('refresh_at', Math.floor(Date.now() / 1000))
-    sessionStorage.setItem('expires_seconds', res.data.expires_seconds)
-    sessionStorage.setItem('user_name', res.data.user_name)
+    sessionStorage.setItem('expires_seconds', data.expires_seconds)
+    sessionStorage.setItem('user_name', data.user_name)
     initTokenRefresher()
     router.push('/')
-  } catch (err) {
-    error.value = err.response?.data?.error || err.message || '登录失败'
-    console.error(err)
-  }
+    loading.value = false
+  })
+
+  socket.on('auth_failed', (data) => {
+    success.value = false
+    message.value = '登录失败：' + data.message
+    loading.value = false
+  })
 }
 </script>
 
