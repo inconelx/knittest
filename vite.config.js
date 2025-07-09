@@ -21,10 +21,10 @@ export default defineConfig({
     //     changeOrigin: true,
     //   },
     // },
-    // https: {
-    //   key: fs.readFileSync(path.resolve(__dirname, '../cert/server_key.pem')),
-    //   cert: fs.readFileSync(path.resolve(__dirname, '../cert/server_cert.pem')),
-    // },
+    https: {
+      key: fs.readFileSync(path.resolve(__dirname, '../cert/server_key.pem')),
+      cert: fs.readFileSync(path.resolve(__dirname, '../cert/server_cert.pem')),
+    },
     host: '0.0.0.0',
     port: 5173,
   },

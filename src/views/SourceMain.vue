@@ -82,7 +82,8 @@ const logout = async () => {
 
 const testPrint = async () => {
   await knit_api.post('/api/send-print', {
-    msg: '1234',
+    print_label: 'knit_cloth_print',
+    print_param: 'CLTH-250706-0001',
   })
 }
 </script>
