@@ -66,6 +66,7 @@ const startLogin = async () => {
     sessionStorage.setItem('refresh_at', Math.floor(Date.now() / 1000))
     sessionStorage.setItem('expires_seconds', res.data.expires_seconds)
     sessionStorage.setItem('user_name', res.data.user_name)
+    sessionStorage.setItem('is_admin', res.data.is_admin)
     initTokenRefresher()
     router.push('/')
   } catch (err) {

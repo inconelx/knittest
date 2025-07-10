@@ -9,8 +9,8 @@ let refreshPromise = null
 
 //针织api
 export const knit_api = axios.create({
-  baseURL: 'https://192.168.0.104:5000',
-  // baseURL: 'http://localhost:5000',
+  // baseURL: 'https://192.168.0.104:5000',
+  // baseURL: 'http://127.0.0.1:5000',
   timeout: 10000,
 })
 
@@ -43,7 +43,7 @@ knit_api.interceptors.response.use(
         try {
           // 等待用户关闭弹窗后再跳转
           await ElMessageBox.alert(
-            '登录状态无效，可能有如下原因：1、您尚未登录；2、登录签名过期；3、有其它用户在别处使用同一账号登录，且超出账号登录数限制。请重新登录。',
+            '登录状态无效，可能有如下原因：1、服务器重启；2、您尚未登录；3、登录签名过期；4、有其它用户在别处使用同一账号登录，且超出账号登录数限制。请重新登录。',
             '提示',
             {
               confirmButtonText: '确定',
@@ -76,6 +76,7 @@ async function refreshToken() {
       sessionStorage.setItem('refresh_at', Math.floor(Date.now() / 1000))
       sessionStorage.setItem('expires_seconds', res.data.expires_seconds)
       sessionStorage.setItem('user_name', res.data.user_name)
+      sessionStorage.setItem('is_admin', res.data.is_admin)
       // console.log('🔁 Token refreshed successfully.')
     } catch (error) {
       // console.error('❌ Token refresh failed:', error)

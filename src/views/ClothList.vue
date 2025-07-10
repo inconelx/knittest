@@ -10,6 +10,9 @@
       <el-button type="primary" :disabled="selectedIds.length === 0" @click="openCorrectAddInput">
         勾选设置重量修正
       </el-button>
+      <el-button type="primary" :disabled="selectedIds.length === 0" @click="batchPrintLabel">
+        勾选打印标签
+      </el-button>
       <el-button type="danger" :disabled="selectedIds.length === 0" @click="deleteSelected">
         删除勾选
       </el-button>
@@ -176,7 +179,7 @@
       </el-table-column>
       <el-table-column prop="note" label="备注" width="320" show-overflow-tooltip />
     </el-table>
-    <ClothDialog ref="dialogRef" @success="fetchGrid" />
+    <ClothDialog ref="dialogRef" @success="handleDialogSubmit" />
     <OrderSelect ref="orderSelectRef" @success="handleDialogSetOrder" />
     <DecimalDialog ref="correctDialogRef" :title="'重量修正设置'" @success="weightCorrectSet" />
   </div>
@@ -241,6 +244,32 @@ const deliveryStatusOptions = ref([
   { statusValue: false, statusLabel: '未出货' },
   { statusValue: true, statusLabel: '已出货' },
 ])
+
+const printClothLabel = async (cloth_id) => {
+  try {
+    await knit_api.post('/api/send-print', {
+      print_label: 'knit_cloth_print',
+      print_param: cloth_id,
+    })
+    ElMessage.success('发送打印成功')
+  } catch (err) {
+    ElMessage.error('发送打印失败：' + (err.response?.data?.error || err.message))
+    console.error(err)
+  }
+}
+
+const batchPrintLabel = async () => {
+  for (const cloth_id of selectedIds.value) {
+    printClothLabel(cloth_id)
+  }
+}
+
+const handleDialogSubmit = async (is_print, cloth_id) => {
+  fetchGrid()
+  if (is_print) {
+    printClothLabel(cloth_id)
+  }
+}
 
 const handleDialogSetOrder = async (submit_id, submit_label) => {
   try {

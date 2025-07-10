@@ -14,18 +14,19 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
-  server: {
+  // server: {
     // proxy: {
     //   '/api': {
     //     target: 'http://localhost:5000',
     //     changeOrigin: true,
+    //     rewrite: (path) => path.replace(/^\/api/, ''),
     //   },
     // },
-    https: {
-      key: fs.readFileSync(path.resolve(__dirname, '../cert/server_key.pem')),
-      cert: fs.readFileSync(path.resolve(__dirname, '../cert/server_cert.pem')),
-    },
-    host: '0.0.0.0',
-    port: 5173,
-  },
+    // https: {
+    //   key: fs.readFileSync(path.resolve(__dirname, '../cert/server_key.pem')),
+    //   cert: fs.readFileSync(path.resolve(__dirname, '../cert/server_cert.pem')),
+    // },
+    // host: '0.0.0.0',
+    // port: 5173,
+  // },
 })

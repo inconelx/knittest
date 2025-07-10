@@ -11,6 +11,7 @@ import EmployeeClothList from '@/views/EmployeeClothList.vue'
 import DeliveryList from '@/views/DeliveryList.vue'
 import { initTokenRefresher, knit_api, stopTokenRefresher } from '@/utils/auth.js'
 import axios from 'axios'
+import Home from '@/views/Home.vue'
 
 const routes = [
   { path: '/login', component: Login },
@@ -19,13 +20,22 @@ const routes = [
     component: SourceMain,
     meta: { requiresAuth: true },
     children: [
-      { path: '', redirect: '/companies' }, // 默认显示
+      { path: '', redirect: '/home' }, // 默认显示
       // { path: '/users', component: UserList },
+      {
+        path: '/home',
+        component: Home,
+        meta: {
+          title: '主页',
+          admin_only: false,
+        },
+      },
       {
         path: '/companies',
         component: CompanyList,
         meta: {
           title: '公司管理',
+          admin_only: true,
         },
       },
       {
@@ -33,6 +43,7 @@ const routes = [
         component: MachineList,
         meta: {
           title: '机台管理',
+          admin_only: true,
         },
       },
       {
@@ -40,6 +51,7 @@ const routes = [
         component: OrderList,
         meta: {
           title: '计划单管理',
+          admin_only: true,
         },
       },
       {
@@ -47,6 +59,7 @@ const routes = [
         component: ClothList,
         meta: {
           title: '布匹管理',
+          admin_only: true,
         },
       },
       {
@@ -54,6 +67,7 @@ const routes = [
         component: EmployeeClothList,
         meta: {
           title: '员工布匹录入',
+          admin_only: false,
         },
       },
       {
@@ -61,6 +75,7 @@ const routes = [
         component: DeliveryList,
         meta: {
           title: '出货单管理',
+          admin_only: true,
         },
       },
       {
@@ -68,6 +83,7 @@ const routes = [
         component: UserList,
         meta: {
           title: '用户管理',
+          admin_only: true,
         },
       },
 

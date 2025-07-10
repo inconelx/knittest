@@ -35,7 +35,6 @@
         <div class="right-content">
           <span>当前用户：{{ userName }}</span>
           <el-button type="danger" size="small" @click="logout">退出登录</el-button>
-          <el-button @click="testPrint">测试打印</el-button>
         </div>
       </el-header>
       <el-main style="height: 100%">
@@ -55,15 +54,21 @@ import { ArrowDown } from '@element-plus/icons-vue'
 const userName = ref('')
 const router = useRouter()
 const route = useRoute()
-const routeOptions = computed(() => router.getRoutes().filter((r) => r.meta?.title))
+const routeOptions = ref()
 const currentPageTitle = computed(() => route.meta.title || '未命名页面')
 
 // 页面加载时获取本地用户信息
 onMounted(() => {
-  const local_user_name = localStorage.getItem('user_name')
-  if (local_user_name) {
-    userName.value = local_user_name
+  const session_user_name = sessionStorage.getItem('user_name')
+  const session_is_admin = sessionStorage.getItem('is_admin') === 'true'
+  if (session_user_name) {
+    userName.value = session_user_name
   }
+  routeOptions.value = router
+    .getRoutes()
+    .filter(
+      (r) => typeof r.meta.admin_only === 'boolean' && (!r.meta.admin_only || session_is_admin),
+    )
 })
 
 const handleMenuClick = (command) => {
@@ -78,13 +83,6 @@ const logout = async () => {
   await knit_api.post('/api/logout')
   stopTokenRefresher()
   router.push('/login')
-}
-
-const testPrint = async () => {
-  await knit_api.post('/api/send-print', {
-    print_label: 'knit_cloth_print',
-    print_param: 'CLTH-250706-0001',
-  })
 }
 </script>
 <style scoped>

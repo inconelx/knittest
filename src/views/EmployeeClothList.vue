@@ -73,10 +73,10 @@
         :index="(index) => (pagination.page - 1) * pagination.pageSize + index + 1"
       />
       <el-table-column prop="cloth_id" label="ID" width="160" show-overflow-tooltip />
-      <el-table-column label="操作" width="100" show-overflow-tooltip>
+      <el-table-column label="操作" width="180" show-overflow-tooltip>
         <template #default="scope">
           <el-button size="small" @click="openDialog('edit', scope.row.cloth_id)">编辑</el-button>
-          <!-- <el-button size="small" @click="openDialog('copy', scope.row.cloth_id)">复制</el-button> -->
+          <el-button size="small" @click="printClothLabel(scope.row.cloth_id)">打印标签</el-button>
         </template>
       </el-table-column>
       <el-table-column prop="machine_name" label="机台号" width="160" show-overflow-tooltip />
@@ -121,7 +121,7 @@
       </el-table-column>
       <el-table-column prop="note" label="备注" width="320" show-overflow-tooltip />
     </el-table>
-    <EmployeeClothDialog ref="dialogRef" @success="fetchGrid" />
+    <EmployeeClothDialog ref="dialogRef" @success="handleDialogSubmit" />
   </div>
 </template>
 
@@ -172,6 +172,25 @@ const searchForm = ref({
     add_time: [],
   },
 })
+
+const printClothLabel = async (cloth_id) => {
+  try {
+    await knit_api.post('/api/employee/cloth/print', {
+      pk_value: cloth_id,
+    })
+    ElMessage.success('发送打印成功')
+  } catch (err) {
+    ElMessage.error('发送打印失败：' + (err.response?.data?.error || err.message))
+    console.error(err)
+  }
+}
+
+const handleDialogSubmit = async (is_print, cloth_id) => {
+  fetchGrid()
+  if (is_print) {
+    printClothLabel(cloth_id)
+  }
+}
 
 const tableHeightSet = async () => {
   await nextTick()

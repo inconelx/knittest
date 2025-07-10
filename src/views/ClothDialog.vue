@@ -72,7 +72,8 @@
 
     <template #footer>
       <el-button @click="visible = false">取消</el-button>
-      <el-button type="primary" @click="handleSubmit" :disabled="saveDisabled">保存</el-button>
+      <el-button type="primary" @click="handleSubmit(false)" :disabled="saveDisabled">保存</el-button>
+      <el-button type="primary" @click="handleSubmit(true)" :disabled="saveDisabled">保存并打印</el-button>
     </template>
   </el-dialog>
 </template>
@@ -223,7 +224,7 @@ const open = async (action, id = null) => {
   saveDisabled.value = false
 }
 
-const handleSubmit = () => {
+const handleSubmit = (is_print) => {
   formRef.value.validate(async (valid) => {
     if (!valid) return
     try {
@@ -237,10 +238,11 @@ const handleSubmit = () => {
         }
       }
       if (mode.value === 'add') {
-        await knit_api.post('/api/generic/insert', {
+        const res = await knit_api.post('/api/generic/insert', {
           table_name: 'knit_cloth',
           json_data: input_values,
         })
+        recordId.value = res.data['insert_id']
         ElMessage.success('新增成功')
       } else if (mode.value === 'edit') {
         await knit_api.post('/api/generic/update', {
@@ -251,7 +253,7 @@ const handleSubmit = () => {
         ElMessage.success('更新成功')
       }
       visible.value = false
-      emit('success') // 通知父组件刷新列表等
+      emit('success', is_print, recordId.value) // 通知父组件刷新列表等
     } catch (err) {
       ElMessage.error('保存失败：' + (err.response?.data?.error || err.message))
       console.error(err)
