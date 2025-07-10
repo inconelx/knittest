@@ -4,15 +4,37 @@
       <el-button type="primary" @click="fetchGrid">刷新</el-button>
       <el-button type="primary" @click="openDialog('add')">新增用户</el-button>
       <el-button type="primary" @click="resetSearch">重置筛选</el-button>
+      <el-button
+        type="primary"
+        :disabled="selectedIds.length === 0"
+        @click="batchUserSet({ print_allowed: false }, '禁用打印')"
+      >
+        勾选禁用打印
+      </el-button>
+      <el-button
+        type="primary"
+        :disabled="selectedIds.length === 0"
+        @click="batchUserSet({ print_allowed: true }, '启用打印')"
+      >
+        勾选允许打印
+      </el-button>
+      <el-button
+        type="primary"
+        :disabled="selectedIds.length === 0"
+        @click="batchUserSet({ print_allowed: false }, '封禁')"
+      >
+        勾选封禁
+      </el-button>
+      <el-button
+        type="primary"
+        :disabled="selectedIds.length === 0"
+        @click="batchUserSet({ print_allowed: true }, '解封')"
+      >
+        勾选解封
+      </el-button>
       <el-button type="danger" :disabled="selectedIds.length === 0" @click="deleteSelected">
         删除勾选
       </el-button>
-      <!-- <el-button type="danger" :disabled="selectedIds.length === 0" @click="deleteSelected">
-        勾选封禁
-      </el-button>
-      <el-button type="danger" :disabled="selectedIds.length === 0" @click="deleteSelected">
-        勾选解封
-      </el-button> -->
     </div>
 
     <div>
@@ -32,6 +54,21 @@
           >
             <el-option
               v-for="item in userStatusOptions"
+              :key="item.statusValue"
+              :label="item.statusLabel"
+              :value="item.statusValue"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="打印机权限">
+          <el-select
+            v-model="searchForm.filters.print_status"
+            placeholder="请选择打印机权限"
+            style="width: 160px"
+            clearable
+          >
+            <el-option
+              v-for="item in printStatusOptions"
               :key="item.statusValue"
               :label="item.statusLabel"
               :value="item.statusValue"
@@ -98,6 +135,13 @@
         width="160"
         show-overflow-tooltip
       />
+      <el-table-column
+        prop="print_status"
+        label="打印机权限"
+        :formatter="formatPrintStatus"
+        width="160"
+        show-overflow-tooltip
+      />
       <el-table-column prop="add_time" label="录入时间" width="160" show-overflow-tooltip>
         <template #default="{ row }">
           {{ formatDate(row.add_time) }}
@@ -149,6 +193,7 @@ const searchForm = ref({
     user_name: null,
     real_name: null,
     user_status: null,
+    print_status: null,
   },
   fuzzy_fields: {
     user_name: null,
@@ -164,6 +209,12 @@ const userStatusOptions = ref([
   { statusValue: 0, statusLabel: '管理员' },
   { statusValue: 1, statusLabel: '员工' },
   { statusValue: 2, statusLabel: '封禁' },
+])
+
+const printStatusMap = ref({ 0: '允许', 1: '拒绝' })
+const printStatusOptions = ref([
+  { statusValue: 0, statusLabel: '允许' },
+  { statusValue: 1, statusLabel: '拒绝' },
 ])
 
 const tableHeightSet = async () => {
@@ -230,6 +281,10 @@ const formatUserStatus = (row) => {
   return userStatusMap.value[row.user_status] || row.user_status || '-'
 }
 
+const formatPrintStatus = (row) => {
+  return printStatusMap.value[row.print_status] || row.print_status || '-'
+}
+
 const handlePageChange = (newPage) => {
   pagination.value.page = newPage
   fetchGrid()
@@ -254,6 +309,27 @@ const deleteSelected = async () => {
   } catch (err) {
     if (err !== 'cancel') {
       ElMessage.error('删除失败：' + (err.response?.data?.error || err.message))
+      console.error(err)
+    }
+  }
+}
+
+const batchUserSet = async (set_data, set_text) => {
+  try {
+    await ElMessageBox.confirm('确定要将选中的用户 ' + set_text + ' 吗？', '提示', {
+      type: 'warning',
+    })
+    const res = await knit_api.post('/api/generic/update', {
+      table_name: 'sys_user',
+      pk_values: selectedIds.value,
+      json_data: set_data,
+    })
+    ElMessage.success(res.data.message || set_text + ' 成功')
+    selectedIds.value = []
+    fetchGrid()
+  } catch (err) {
+    if (err !== 'cancel') {
+      ElMessage.error(set_text + ' 成功：' + (err.response?.data?.error || err.message))
       console.error(err)
     }
   }

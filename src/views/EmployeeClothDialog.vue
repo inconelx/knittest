@@ -39,7 +39,7 @@
       </el-form-item>
 
       <el-form-item label="计划单号" prop="cloth_order_id">
-        <el-select v-model="form.cloth_order_id" placeholder="" maxlength="60">
+        <el-select v-model="form.cloth_order_id" disabled placeholder="" maxlength="60">
           <el-option
             v-for="item in orderOptions"
             :key="item.order_id"
@@ -62,8 +62,12 @@
 
     <template #footer>
       <el-button @click="visible = false">取消</el-button>
-      <el-button type="primary" @click="handleSubmit(false)" :disabled="saveDisabled">保存</el-button>
-      <el-button type="primary" @click="handleSubmit(true)" :disabled="saveDisabled">保存并打印</el-button>
+      <el-button type="primary" @click="handleSubmit(false)" :disabled="saveDisabled"
+        >保存</el-button
+      >
+      <el-button type="primary" @click="handleSubmit(true)" :disabled="saveDisabled"
+        >保存并打印</el-button
+      >
     </template>
   </el-dialog>
 </template>
@@ -146,7 +150,7 @@ const open = async (action, id = null) => {
   mode.value = action
   recordId.value = id
   saveDisabled.value = true
-  
+
   machineOptions.value = []
   orderOptions.value = []
 
