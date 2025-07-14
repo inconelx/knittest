@@ -21,14 +21,14 @@
       <el-button
         type="primary"
         :disabled="selectedIds.length === 0"
-        @click="batchUserSet({ print_allowed: false }, '封禁')"
+        @click="batchUserSet({ is_locked: true }, '封禁')"
       >
         勾选封禁
       </el-button>
       <el-button
         type="primary"
         :disabled="selectedIds.length === 0"
-        @click="batchUserSet({ print_allowed: true }, '解封')"
+        @click="batchUserSet({ is_locked: false }, '解封')"
       >
         勾选解封
       </el-button>
