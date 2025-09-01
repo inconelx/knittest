@@ -67,7 +67,7 @@
         :index="(index) => (pagination.page - 1) * pagination.pageSize + index + 1"
       />
       <el-table-column prop="delivery_id" label="ID" width="160" show-overflow-tooltip />
-      <el-table-column label="操作" width="240" show-overflow-tooltip>
+      <el-table-column label="操作" width="320" show-overflow-tooltip>
         <template #default="scope">
           <el-button size="small" @click="openDialog('edit', scope.row.delivery_id)"
             >信息编辑</el-button
@@ -75,6 +75,7 @@
           <el-button size="small" @click="openDeliveryClothEdit(scope.row.delivery_id)"
             >出货布匹设置</el-button
           >
+          <el-button size="small" @click="printDelivery(scope.row.delivery_id)">打印码单</el-button>
         </template>
       </el-table-column>
       <el-table-column prop="delivery_no" label="出货单号" width="160" show-overflow-tooltip />
@@ -155,6 +156,19 @@ const searchForm = ref({
     add_time: [],
   },
 })
+
+const printDelivery = async (delivery_id) => {
+  try {
+    await knit_api.post('/api/send-print', {
+      print_label: 'knit_delivery_print',
+      print_param: delivery_id,
+    })
+    ElMessage.success('发送打印成功')
+  } catch (err) {
+    ElMessage.error('发送打印失败：' + (err.response?.data?.error || err.message))
+    console.error(err)
+  }
+}
 
 const handleDialogSetCompany = async (submit_id, submit_label) => {
   try {
