@@ -72,8 +72,12 @@
 
     <template #footer>
       <el-button @click="visible = false">取消</el-button>
-      <el-button type="primary" @click="handleSubmit(false)" :disabled="saveDisabled">保存</el-button>
-      <el-button type="primary" @click="handleSubmit(true)" :disabled="saveDisabled">保存并打印</el-button>
+      <el-button type="primary" @click="handleSubmit(false)" :disabled="saveDisabled"
+        >保存</el-button
+      >
+      <el-button type="primary" @click="handleSubmit(true)" :disabled="saveDisabled"
+        >保存并打印</el-button
+      >
     </template>
   </el-dialog>
 </template>
@@ -91,6 +95,7 @@ const recordId = ref(null)
 const saveDisabled = ref(true)
 const machineLoading = ref(false)
 const orderLoading = ref(false)
+const selectedOrderNo = ref()
 
 const machineOptions = ref([])
 const orderOptions = ref([])
@@ -134,7 +139,6 @@ const remoteSearchMachine = async (query) => {
       keyword: query,
     })
     machineOptions.value = res.data
-    orderOptions.value = res.data
   } catch (err) {
     ElMessage.error('搜索失败：' + (err.response?.data?.error || err.message))
     console.error(err)
@@ -156,6 +160,15 @@ const remoteSearchOrder = async (query) => {
       keyword: query,
     })
     orderOptions.value = res.data
+    if (form.value.cloth_order_id !== null && form.value.cloth_order_id !== undefined) {
+      const matched = orderOptions.value.find((item) => item.order_id === form.value.cloth_order_id)
+      if (!matched) {
+        orderOptions.value.push({
+          order_id: form.value.cloth_order_id,
+          order_no: selectedOrderNo.value,
+        })
+      }
+    }
   } catch (err) {
     ElMessage.error('搜索失败：' + (err.response?.data?.error || err.message))
     console.error(err)
@@ -166,8 +179,10 @@ const remoteSearchOrder = async (query) => {
 }
 
 const handleMachineChange = (val) => {
-  const matched = orderOptions.value.find((item) => item.machine_id === val)
+  const matched = machineOptions.value.find((item) => item.machine_id === val)
+  orderOptions.value = matched ? [matched] : []
   form.value.cloth_order_id = matched ? matched.order_id : null
+  selectedOrderNo.value = matched ? matched.order_no : null
 }
 
 const open = async (action, id = null) => {
@@ -180,7 +195,7 @@ const open = async (action, id = null) => {
 
   machineOptions.value = []
   orderOptions.value = []
-  
+
   resetForm()
   await nextTick()
   visible.value = true

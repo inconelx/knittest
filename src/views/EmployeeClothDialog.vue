@@ -128,7 +128,6 @@ const remoteSearchMachine = async (query) => {
       keyword: query,
     })
     machineOptions.value = res.data
-    orderOptions.value = res.data
   } catch (err) {
     ElMessage.error('搜索失败：' + (err.response?.data?.error || err.message))
     console.error(err)
@@ -139,7 +138,8 @@ const remoteSearchMachine = async (query) => {
 }
 
 const handleMachineChange = (val) => {
-  const matched = orderOptions.value.find((item) => item.machine_id === val)
+  const matched = machineOptions.value.find((item) => item.machine_id === val)
+  orderOptions.value = matched ? [matched] : []
   form.value.cloth_order_id = matched ? matched.order_id : null
 }
 
