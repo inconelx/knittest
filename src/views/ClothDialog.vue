@@ -13,7 +13,6 @@
           :remote-method="remoteSearchMachine"
           @change="handleMachineChange"
           :loading="machineLoading"
-          :disabled="mode !== 'add'"
           maxlength="60"
         >
           <el-option

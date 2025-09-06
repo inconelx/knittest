@@ -161,7 +161,7 @@ const printDelivery = async (delivery_id) => {
   try {
     await knit_api.post('/api/send-print', {
       print_label: 'knit_delivery_print',
-      print_param: delivery_id,
+      print_param_list: [delivery_id],
     })
     ElMessage.success('发送打印成功')
   } catch (err) {
