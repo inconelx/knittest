@@ -1,16 +1,12 @@
 <template>
   <div class="view_main">
     <div>
-      <DebounceButton type="primary" :on-click="() => fetchGrid()">刷新</DebounceButton>
-      <DebounceButton type="primary" :on-click="() => openDialog('add')">新增公司</DebounceButton>
-      <DebounceButton type="primary" :on-click="() => resetSearch()">重置筛选</DebounceButton>
-      <DebounceButton
-        type="danger"
-        :disabled="selectedIds.length === 0"
-        :on-click="() => deleteSelected()"
-      >
+      <el-button type="primary" @click="fetchGrid">刷新</el-button>
+      <el-button type="primary" @click="openDialog('add')">新增公司</el-button>
+      <el-button type="primary" @click="resetSearch">重置筛选</el-button>
+      <el-button type="danger" :disabled="selectedIds.length === 0" @click="deleteSelected">
         删除勾选
-      </DebounceButton>
+      </el-button>
     </div>
 
     <div>
@@ -84,12 +80,8 @@
       <el-table-column prop="company_id" label="ID" width="160" show-overflow-tooltip />
       <el-table-column label="操作" width="160" show-overflow-tooltip>
         <template #default="scope">
-          <DebounceButton size="small" :on-click="() => openDialog('edit', scope.row.company_id)"
-            >编辑</DebounceButton
-          >
-          <DebounceButton size="small" :on-click="() => openDialog('copy', scope.row.company_id)"
-            >复制</DebounceButton
-          >
+          <el-button size="small" @click="openDialog('edit', scope.row.company_id)">编辑</el-button>
+          <el-button size="small" @click="openDialog('copy', scope.row.company_id)">复制</el-button>
         </template>
       </el-table-column>
       <el-table-column prop="company_name" label="公司名称" width="160" show-overflow-tooltip />
@@ -125,7 +117,6 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { knit_api } from '@/utils/auth.js'
 import utc from 'dayjs/plugin/utc'
 import CompanyDialog from './CompanyDialog.vue'
-import DebounceButton from '@/components/DebounceButton.vue'
 
 dayjs.extend(utc)
 

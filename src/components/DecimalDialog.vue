@@ -7,10 +7,8 @@
     </el-form>
 
     <template #footer>
-      <DebounceButton :on-click="() => (visible = false)">取消</DebounceButton>
-      <DebounceButton type="primary" :on-click="() => handleSubmit()" :disabled="saveDisabled"
-        >保存</DebounceButton
-      >
+      <el-button @click="visible = false">取消</el-button>
+      <el-button type="primary" @click="handleSubmit()" :disabled="saveDisabled">保存</el-button>
     </template>
   </el-dialog>
 </template>
@@ -19,7 +17,6 @@
 import { ref, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import DecimalInput from '@/components/DecimalInput.vue'
-import DebounceButton from '@/components/DebounceButton.vue'
 
 const visible = ref(false)
 const saveDisabled = ref(true)

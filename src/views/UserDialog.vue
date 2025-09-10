@@ -21,10 +21,8 @@
     </el-form>
 
     <template #footer>
-      <DebounceButton :on-click="() => (visible = false)">取消</DebounceButton>
-      <DebounceButton type="primary" :on-click="() => handleSubmit()" :disabled="saveDisabled"
-        >保存</DebounceButton
-      >
+      <el-button @click="visible = false">取消</el-button>
+      <el-button type="primary" @click="handleSubmit" :disabled="saveDisabled">保存</el-button>
     </template>
   </el-dialog>
   <PasswordDialog ref="passwordDialogRef" :title="'设置密码'" @success="passwordSet" />
@@ -36,7 +34,6 @@ import axios from 'axios'
 import { ElMessage } from 'element-plus'
 import { knit_api } from '@/utils/auth.js'
 import PasswordDialog from '@/components/PasswordDialog.vue'
-import DebounceButton from '@/components/DebounceButton.vue'
 
 const visible = ref(false)
 const mode = ref('add') // 'add' | 'edit'
@@ -105,6 +102,8 @@ const open = async (action, id = null) => {
 }
 
 const handleSubmit = () => {
+  if (saveDisabled.value) return
+  saveDisabled.value = true
   formRef.value.validate(async (valid) => {
     try {
       if (valid) {
@@ -133,6 +132,10 @@ const handleSubmit = () => {
     } catch (err) {
       ElMessage.error('保存失败：' + (err.response?.data?.error || err.message))
       console.error(err)
+    } finally {
+      setTimeout(() => {
+        saveDisabled.value = false
+      }, 500)
     }
   })
 }

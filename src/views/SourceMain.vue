@@ -34,9 +34,7 @@
 
         <div class="right-content">
           <span>当前用户：{{ userName }}</span>
-          <DebounceButton type="danger" size="small" :on-click="() => logout()"
-            >退出登录</DebounceButton
-          >
+          <el-button type="danger" size="small" @click="logout">退出登录</el-button>
         </div>
       </el-header>
       <el-main style="height: 100%">
@@ -52,7 +50,6 @@ import { useRouter, useRoute } from 'vue-router'
 import { stopTokenRefresher, knit_api } from '@/utils/auth.js'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { ArrowDown } from '@element-plus/icons-vue'
-import DebounceButton from '@/components/DebounceButton.vue'
 
 const userName = ref('')
 const router = useRouter()

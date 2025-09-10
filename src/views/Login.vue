@@ -12,9 +12,7 @@
         </el-form-item>
         <el-form-item style="width: 100%">
           <div style="width: 100%; display: flex; justify-content: flex-end">
-            <DebounceButton type="primary" :on-click="() => startLogin()" :disabled="loading"
-              >登录</DebounceButton
-            >
+            <el-button type="primary" @click="startLogin" :disabled="loading">登录</el-button>
           </div>
         </el-form-item>
       </el-form>
@@ -29,7 +27,6 @@ import { useRouter } from 'vue-router'
 import axios from 'axios'
 import { initTokenRefresher, knit_api } from '@/utils/auth.js'
 import forge from 'node-forge'
-import DebounceButton from '@/components/DebounceButton.vue'
 
 const router = useRouter()
 const form = ref({

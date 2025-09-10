@@ -1,23 +1,15 @@
 <template>
   <div class="view_main">
     <div>
-      <DebounceButton type="primary" :on-click="() => fetchGrid()">刷新</DebounceButton>
-      <DebounceButton type="primary" :on-click="() => openDialog('add')">新增出货单</DebounceButton>
-      <DebounceButton type="primary" :on-click="() => resetSearch()">重置筛选</DebounceButton>
-      <DebounceButton
-        type="primary"
-        :disabled="selectedIds.length === 0"
-        :on-click="() => openCompanySelect()"
-      >
+      <el-button type="primary" @click="fetchGrid">刷新</el-button>
+      <el-button type="primary" @click="openDialog('add')">新增出货单</el-button>
+      <el-button type="primary" @click="resetSearch">重置筛选</el-button>
+      <el-button type="primary" :disabled="selectedIds.length === 0" @click="openCompanySelect">
         勾选设置公司
-      </DebounceButton>
-      <DebounceButton
-        type="danger"
-        :disabled="selectedIds.length === 0"
-        :on-click="() => deleteSelected()"
-      >
+      </el-button>
+      <el-button type="danger" :disabled="selectedIds.length === 0" @click="deleteSelected">
         删除勾选
-      </DebounceButton>
+      </el-button>
     </div>
 
     <div>
@@ -77,17 +69,13 @@
       <el-table-column prop="delivery_id" label="ID" width="160" show-overflow-tooltip />
       <el-table-column label="操作" width="320" show-overflow-tooltip>
         <template #default="scope">
-          <DebounceButton size="small" :on-click="() => openDialog('edit', scope.row.delivery_id)"
-            >信息编辑</DebounceButton
+          <el-button size="small" @click="openDialog('edit', scope.row.delivery_id)"
+            >信息编辑</el-button
           >
-          <DebounceButton
-            size="small"
-            :on-click="() => openDeliveryClothEdit(scope.row.delivery_id)"
-            >出货布匹设置</DebounceButton
+          <el-button size="small" @click="openDeliveryClothEdit(scope.row.delivery_id)"
+            >出货布匹设置</el-button
           >
-          <DebounceButton size="small" :on-click="() => printDelivery(scope.row.delivery_id)"
-            >打印码单</DebounceButton
-          >
+          <el-button size="small" @click="printDelivery(scope.row.delivery_id)">打印码单</el-button>
         </template>
       </el-table-column>
       <el-table-column prop="delivery_no" label="出货单号" width="160" show-overflow-tooltip />
@@ -134,7 +122,6 @@ import DeliveryDialog from './DeliveryDialog.vue'
 import DeliveryClothEdit from './DeliveryClothEdit.vue'
 import CompanySelect from './CompanySelect.vue'
 import DecimalDialog from '@/components/DecimalDialog.vue'
-import DebounceButton from '@/components/DebounceButton.vue'
 
 dayjs.extend(utc)
 

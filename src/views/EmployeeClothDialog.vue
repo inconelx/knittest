@@ -61,12 +61,12 @@
     </el-form>
 
     <template #footer>
-      <DebounceButton :on-click="() => (visible = false)">取消</DebounceButton>
-      <DebounceButton type="primary" :on-click="() => handleSubmit(false)" :disabled="saveDisabled"
-        >保存</DebounceButton
+      <el-button @click="visible = false">取消</el-button>
+      <el-button type="primary" @click="handleSubmit(false)" :disabled="saveDisabled"
+        >保存</el-button
       >
-      <DebounceButton type="primary" :on-click="() => handleSubmit(true)" :disabled="saveDisabled"
-        >保存并打印</DebounceButton
+      <el-button type="primary" @click="handleSubmit(true)" :disabled="saveDisabled"
+        >保存并打印</el-button
       >
     </template>
   </el-dialog>
@@ -78,7 +78,6 @@ import axios from 'axios'
 import { ElMessage } from 'element-plus'
 import { knit_api } from '@/utils/auth.js'
 import DecimalInput from '@/components/DecimalInput.vue'
-import DebounceButton from '@/components/DebounceButton.vue'
 
 const visible = ref(false)
 const mode = ref('add') // 'add' | 'edit'
@@ -199,6 +198,8 @@ const open = async (action, id = null) => {
 }
 
 const handleSubmit = (is_print) => {
+  if (saveDisabled.value) return
+  saveDisabled.value = true
   formRef.value.validate(async (valid) => {
     try {
       if (valid) {
@@ -230,6 +231,10 @@ const handleSubmit = (is_print) => {
     } catch (err) {
       ElMessage.error('保存失败：' + (err.response?.data?.error || err.message))
       console.error(err)
+    } finally {
+      setTimeout(() => {
+        saveDisabled.value = false
+      }, 500)
     }
   })
 }

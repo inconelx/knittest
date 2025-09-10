@@ -1,44 +1,40 @@
 <template>
   <div class="view_main">
     <div>
-      <DebounceButton type="primary" :on-click="() => fetchGrid()">刷新</DebounceButton>
-      <DebounceButton type="primary" :on-click="() => openDialog('add')">新增用户</DebounceButton>
-      <DebounceButton type="primary" :on-click="() => resetSearch()">重置筛选</DebounceButton>
-      <DebounceButton
+      <el-button type="primary" @click="fetchGrid">刷新</el-button>
+      <el-button type="primary" @click="openDialog('add')">新增用户</el-button>
+      <el-button type="primary" @click="resetSearch">重置筛选</el-button>
+      <el-button
         type="primary"
         :disabled="selectedIds.length === 0"
-        :on-click="() => batchUserSet({ print_allowed: false }, '禁用打印')"
+        @click="batchUserSet({ print_allowed: false }, '禁用打印')"
       >
         勾选禁用打印
-      </DebounceButton>
-      <DebounceButton
+      </el-button>
+      <el-button
         type="primary"
         :disabled="selectedIds.length === 0"
-        :on-click="() => batchUserSet({ print_allowed: true }, '启用打印')"
+        @click="batchUserSet({ print_allowed: true }, '启用打印')"
       >
         勾选允许打印
-      </DebounceButton>
-      <DebounceButton
+      </el-button>
+      <el-button
         type="primary"
         :disabled="selectedIds.length === 0"
-        :on-click="() => batchUserSet({ is_locked: true }, '封禁')"
+        @click="batchUserSet({ is_locked: true }, '封禁')"
       >
         勾选封禁
-      </DebounceButton>
-      <DebounceButton
+      </el-button>
+      <el-button
         type="primary"
         :disabled="selectedIds.length === 0"
-        :on-click="() => batchUserSet({ is_locked: false }, '解封')"
+        @click="batchUserSet({ is_locked: false }, '解封')"
       >
         勾选解封
-      </DebounceButton>
-      <DebounceButton
-        type="danger"
-        :disabled="selectedIds.length === 0"
-        :on-click="() => deleteSelected()"
-      >
+      </el-button>
+      <el-button type="danger" :disabled="selectedIds.length === 0" @click="deleteSelected">
         删除勾选
-      </DebounceButton>
+      </el-button>
     </div>
 
     <div>
@@ -124,11 +120,9 @@
       <el-table-column prop="user_id" label="ID" width="160" show-overflow-tooltip />
       <el-table-column label="操作" width="200" show-overflow-tooltip>
         <template #default="scope">
-          <DebounceButton size="small" :on-click="() => openDialog('edit', scope.row.user_id)"
-            >编辑</DebounceButton
-          >
-          <DebounceButton size="small" :on-click="() => openpPasswordDialog(scope.row.user_id)"
-            >修改密码</DebounceButton
+          <el-button size="small" @click="openDialog('edit', scope.row.user_id)">编辑</el-button>
+          <el-button size="small" @click="openpPasswordDialog(scope.row.user_id)"
+            >修改密码</el-button
           >
         </template>
       </el-table-column>
@@ -174,7 +168,6 @@ import { knit_api } from '@/utils/auth.js'
 import utc from 'dayjs/plugin/utc'
 import UserDialog from './UserDialog.vue'
 import PasswordDialog from '@/components/PasswordDialog.vue'
-import DebounceButton from '@/components/DebounceButton.vue'
 
 dayjs.extend(utc)
 
