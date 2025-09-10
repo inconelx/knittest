@@ -8,7 +8,7 @@
 
     <template #footer>
       <el-button @click="visible = false">取消</el-button>
-      <el-button type="primary" @click="handleSubmit()">保存</el-button>
+      <el-button type="primary" @click="handleSubmit()" :disabled="saveDisabled">保存</el-button>
     </template>
   </el-dialog>
 </template>
@@ -19,6 +19,7 @@ import { ElMessage } from 'element-plus'
 import DecimalInput from '@/components/DecimalInput.vue'
 
 const visible = ref(false)
+const saveDisabled = ref(true)
 
 const formRef = ref()
 const form = ref({
@@ -65,13 +66,21 @@ const open = async () => {
 }
 
 const handleSubmit = () => {
+  if (saveDisabled.value) return
+  saveDisabled.value = true
   formRef.value.validate(async (valid) => {
-    if (!valid) return
     try {
-      visible.value = false
-      emit('success', form.value.input_num) // 通知父组件刷新列表等
+      if (valid) {
+        visible.value = false
+        emit('success', form.value.input_num) // 通知父组件刷新列表等
+      }
     } catch (err) {
       ElMessage.error('提交失败：' + (err.response?.data?.error || err.message))
+      console.error(err)
+    } finally {
+      setTimeout(() => {
+        saveDisabled.value = false
+      }, 500)
     }
   })
 }

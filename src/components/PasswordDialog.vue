@@ -5,13 +5,18 @@
         <el-input v-model="form.input_password" maxlength="60" type="password" show-password />
       </el-form-item>
       <el-form-item label="请确认密码" prop="input_password_twice">
-        <el-input v-model="form.input_password_twice" maxlength="60" type="password" show-password />
+        <el-input
+          v-model="form.input_password_twice"
+          maxlength="60"
+          type="password"
+          show-password
+        />
       </el-form-item>
     </el-form>
 
     <template #footer>
       <el-button @click="visible = false">取消</el-button>
-      <el-button type="primary" @click="handleSubmit()">确定</el-button>
+      <el-button type="primary" @click="handleSubmit()" :disabled="saveDisabled">确定</el-button>
     </template>
   </el-dialog>
 </template>
@@ -22,6 +27,7 @@ import bcrypt from 'bcryptjs'
 import { ElMessage } from 'element-plus'
 
 const visible = ref(false)
+const saveDisabled = ref(true)
 
 const formRef = ref()
 const form = ref({
@@ -68,19 +74,27 @@ const open = async () => {
   visible.value = true
 }
 
-const handleSubmit = async () => {
+const handleSubmit = () => {
+  if (saveDisabled.value) return
+  saveDisabled.value = true
   formRef.value.validate(async (valid) => {
-    if (!valid) return
     try {
-      const salt = await bcrypt.genSalt(10)
-      const hashedPassword = await bcrypt.hash(form.value.input_password, salt)
-      visible.value = false
-      emit('success', hashedPassword) // 通知父组件刷新列表等
+      if (valid) {
+        const salt = await bcrypt.genSalt(10)
+        const hashedPassword = await bcrypt.hash(form.value.input_password, salt)
+        visible.value = false
+        emit('success', hashedPassword) // 通知父组件刷新列表等
+      }
     } catch (err) {
       ElMessage.error('提交失败：' + (err.response?.data?.error || err.message))
       console.error(err)
+    } finally {
+      setTimeout(() => {
+        saveDisabled.value = false
+      }, 500)
     }
   })
+  
 }
 
 defineExpose({ open })

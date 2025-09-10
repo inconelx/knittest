@@ -198,36 +198,43 @@ const open = async (action, id = null) => {
 }
 
 const handleSubmit = (is_print) => {
+  if (saveDisabled.value) return
+  saveDisabled.value = true
   formRef.value.validate(async (valid) => {
-    if (!valid) return
     try {
-      const input_values = {}
-      for (const key in form.value) {
-        const value = form.value[key]
-        if (value !== null && value !== undefined && value !== '') {
-          input_values[key] = value
-        } else {
-          input_values[key] = null
+      if (valid) {
+        const input_values = {}
+        for (const key in form.value) {
+          const value = form.value[key]
+          if (value !== null && value !== undefined && value !== '') {
+            input_values[key] = value
+          } else {
+            input_values[key] = null
+          }
         }
+        if (mode.value === 'add') {
+          const res = await knit_api.post('/api/employee/cloth/add', {
+            json_data: input_values,
+          })
+          ElMessage.success('新增成功')
+          recordId.value = res.data['insert_id']
+        } else if (mode.value === 'edit') {
+          await knit_api.post('/api/employee/cloth/update', {
+            pk_value: recordId.value,
+            json_data: input_values,
+          })
+          ElMessage.success('更新成功')
+        }
+        visible.value = false
+        emit('success', is_print, recordId.value) // 通知父组件刷新列表等
       }
-      if (mode.value === 'add') {
-        const res = await knit_api.post('/api/employee/cloth/add', {
-          json_data: input_values,
-        })
-        ElMessage.success('新增成功')
-        recordId.value = res.data['insert_id']
-      } else if (mode.value === 'edit') {
-        await knit_api.post('/api/employee/cloth/update', {
-          pk_value: recordId.value,
-          json_data: input_values,
-        })
-        ElMessage.success('更新成功')
-      }
-      visible.value = false
-      emit('success', is_print, recordId.value) // 通知父组件刷新列表等
     } catch (err) {
       ElMessage.error('保存失败：' + (err.response?.data?.error || err.message))
       console.error(err)
+    } finally {
+      setTimeout(() => {
+        saveDisabled.value = false
+      }, 500)
     }
   })
 }

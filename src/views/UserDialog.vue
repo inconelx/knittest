@@ -77,7 +77,7 @@ const open = async (action, id = null) => {
   resetForm()
   await nextTick()
   visible.value = true
-  
+
   if (mode.value === 'add') {
   } else if (recordId.value !== null && mode.value === 'edit') {
     try {
@@ -102,33 +102,40 @@ const open = async (action, id = null) => {
 }
 
 const handleSubmit = () => {
+  if (saveDisabled.value) return
+  saveDisabled.value = true
   formRef.value.validate(async (valid) => {
-    if (!valid) return
     try {
-      if (mode.value === 'add') {
-        passwordDialogRef.value.open()
-      } else if (mode.value === 'edit') {
-        const input_values = {}
-        for (const key in form.value) {
-          const value = form.value[key]
-          if (value !== null && value !== undefined && value !== '') {
-            input_values[key] = value
-          } else {
-            input_values[key] = null
+      if (valid) {
+        if (mode.value === 'add') {
+          passwordDialogRef.value.open()
+        } else if (mode.value === 'edit') {
+          const input_values = {}
+          for (const key in form.value) {
+            const value = form.value[key]
+            if (value !== null && value !== undefined && value !== '') {
+              input_values[key] = value
+            } else {
+              input_values[key] = null
+            }
           }
+          await knit_api.post('/api/generic/update', {
+            table_name: 'sys_user',
+            pk_values: [recordId.value],
+            json_data: input_values,
+          })
+          ElMessage.success('更新成功')
+          visible.value = false
+          emit('success') // 通知父组件刷新列表等
         }
-        await knit_api.post('/api/generic/update', {
-          table_name: 'sys_user',
-          pk_values: [recordId.value],
-          json_data: input_values,
-        })
-        ElMessage.success('更新成功')
-        visible.value = false
-        emit('success') // 通知父组件刷新列表等
       }
     } catch (err) {
       ElMessage.error('保存失败：' + (err.response?.data?.error || err.message))
       console.error(err)
+    } finally {
+      setTimeout(() => {
+        saveDisabled.value = false
+      }, 500)
     }
   })
 }

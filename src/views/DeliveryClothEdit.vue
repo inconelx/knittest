@@ -207,7 +207,11 @@ const openScanner = async () => {
 }
 
 const startScanner = () => {
-  const config = { fps: 4, qrbox: { width: 200, height: 200 } }
+  const config = {
+    fps: 6,
+    qrbox: { width: 200, height: 200 },
+    aspectRatio: 1.0,
+  }
   if (!qrcode_scanner || qrcode_scanner.getState() === Html5QrcodeScannerState.UNKNOWN) {
     qrcode_scanner = new Html5Qrcode('qr-scanner')
   }
