@@ -14,14 +14,20 @@
       总匹数: {{ delivery_info.delivery_piece }}&emsp;总重量: {{ delivery_info.delivery_weight }}
     </p>
     <div>
-      <el-button type="primary" @click="fetchGrid">刷新</el-button>
-      <el-button type="primary" @click="resetSearch">重置筛选</el-button>
-      <el-button type="primary" @click="openScanner">打开扫码</el-button>
-      <el-button type="primary" @click="openClothSelect">新增出货布匹</el-button>
-      <el-button type="danger" :disabled="selectedIds.length === 0" @click="cancelSelected">
+      <DebounceButton type="primary" :on-click="() => fetchGrid()">刷新</DebounceButton>
+      <DebounceButton type="primary" :on-click="() => resetSearch()">重置筛选</DebounceButton>
+      <DebounceButton type="primary" :on-click="() => openScanner()">打开扫码</DebounceButton>
+      <DebounceButton type="primary" :on-click="() => openClothSelect()"
+        >新增出货布匹</DebounceButton
+      >
+      <DebounceButton
+        type="danger"
+        :disabled="selectedIds.length === 0"
+        :on-click="() => cancelSelected()"
+      >
         撤销勾选布匹
-      </el-button>
-      <el-button @click="visible = false">关闭</el-button>
+      </DebounceButton>
+      <DebounceButton :on-click="() => (visible = false)">关闭</DebounceButton>
     </div>
     <div>
       <el-form :inline="true" :model="searchForm" label-width="auto">
@@ -132,7 +138,7 @@
   <el-dialog v-model="dialogVisible" title="扫码" width="525px" @closed="stopScanner">
     <div id="qr-scanner" ref="scannerContainer" style="width: 100%"></div>
     <template #footer>
-      <el-button @click="dialogVisible = false">关闭</el-button>
+      <DebounceButton :on-click="() => (dialogVisible = false)">关闭</DebounceButton>
     </template>
   </el-dialog>
 </template>
@@ -146,6 +152,7 @@ import { knit_api } from '@/utils/auth.js'
 import ClothSelect from './ClothSelect.vue'
 import utc from 'dayjs/plugin/utc'
 import { Html5Qrcode, Html5QrcodeScannerState } from 'html5-qrcode'
+import DebounceButton from '@/components/DebounceButton.vue'
 
 dayjs.extend(utc)
 

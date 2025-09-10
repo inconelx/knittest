@@ -1,10 +1,10 @@
 <template>
   <el-dialog v-model="visible" :title="titleName" width="75%" :close-on-click-modal="false">
     <div>
-      <el-button type="primary" @click="fetchGrid">刷新</el-button>
-      <el-button type="primary" @click="resetSearch">重置筛选</el-button>
-      <el-button @click="handleSubmit(null, null)">设置清除</el-button>
-      <el-button @click="visible = false">取消</el-button>
+      <DebounceButton type="primary" :on-click="() => fetchGrid()">刷新</DebounceButton>
+      <DebounceButton type="primary" :on-click="() => resetSearch()">重置筛选</DebounceButton>
+      <DebounceButton :on-click="() => handleSubmit(null, null)">设置清除</DebounceButton>
+      <DebounceButton :on-click="() => (visible = false)">取消</DebounceButton>
     </div>
     <div class="mt-4 flex justify-between items-center" label-width="auto">
       <el-form :inline="true" :model="searchForm">
@@ -66,11 +66,11 @@
       <el-table-column prop="order_id" label="ID" width="160" show-overflow-tooltip />
       <el-table-column label="操作" width="100" show-overflow-tooltip>
         <template #default="scope">
-          <el-button
+          <DebounceButton
             size="small"
-            @click="handleSubmit(scope.row.order_id, scope.row.order_no)"
+            :on-click="() => handleSubmit(scope.row.order_id, scope.row.order_no)"
             :disabled="selectDisabled"
-            >选取</el-button
+            >选取</DebounceButton
           >
         </template>
       </el-table-column>
@@ -124,6 +124,7 @@ import dayjs from 'dayjs'
 import { ElMessage } from 'element-plus'
 import { knit_api } from '@/utils/auth.js'
 import utc from 'dayjs/plugin/utc'
+import DebounceButton from '@/components/DebounceButton.vue'
 
 dayjs.extend(utc)
 

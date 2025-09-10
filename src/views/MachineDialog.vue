@@ -17,8 +17,10 @@
     </el-form>
 
     <template #footer>
-      <el-button @click="visible = false">取消</el-button>
-      <el-button type="primary" @click="handleSubmit" :disabled="saveDisabled">保存</el-button>
+      <DebounceButton :on-click="() => (visible = false)">取消</DebounceButton>
+      <DebounceButton type="primary" :on-click="() => handleSubmit()" :disabled="saveDisabled"
+        >保存</DebounceButton
+      >
     </template>
   </el-dialog>
 </template>
@@ -28,6 +30,7 @@ import { ref, nextTick } from 'vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
 import { knit_api } from '@/utils/auth.js'
+import DebounceButton from '@/components/DebounceButton.vue'
 
 const visible = ref(false)
 const mode = ref('add') // 'add' | 'edit' | 'copy'
@@ -98,8 +101,6 @@ const open = async (action, id = null) => {
 }
 
 const handleSubmit = () => {
-  if (saveDisabled.value) return
-  saveDisabled.value = true
   formRef.value.validate(async (valid) => {
     try {
       if (valid) {
@@ -132,10 +133,6 @@ const handleSubmit = () => {
     } catch (err) {
       ElMessage.error('保存失败：' + (err.response?.data?.error || err.message))
       console.error(err)
-    } finally {
-      setTimeout(() => {
-        saveDisabled.value = false
-      }, 500)
     }
   })
 }

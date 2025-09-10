@@ -1,0 +1,4 @@
+import { ref } from 'vue'
+
+export const globalLocked = ref(false)
+export const defaultDebounce = 500

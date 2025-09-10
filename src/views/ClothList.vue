@@ -1,21 +1,37 @@
 <template>
   <div class="view_main">
     <div>
-      <el-button type="primary" @click="fetchGrid">刷新</el-button>
-      <el-button type="primary" @click="openDialog('add')">新增布匹</el-button>
-      <el-button type="primary" @click="resetSearch">重置筛选</el-button>
-      <el-button type="primary" :disabled="selectedIds.length === 0" @click="openOrderSelect">
+      <DebounceButton type="primary" :on-click="() => fetchGrid()">刷新</DebounceButton>
+      <DebounceButton type="primary" :on-click="() => openDialog('add')">新增布匹</DebounceButton>
+      <DebounceButton type="primary" :on-click="() => resetSearch()">重置筛选</DebounceButton>
+      <DebounceButton
+        type="primary"
+        :disabled="selectedIds.length === 0"
+        :on-click="() => openOrderSelect()"
+      >
         勾选设置计划单
-      </el-button>
-      <el-button type="primary" :disabled="selectedIds.length === 0" @click="openCorrectAddInput">
+      </DebounceButton>
+      <DebounceButton
+        type="primary"
+        :disabled="selectedIds.length === 0"
+        :on-click="() => openCorrectAddInput()"
+      >
         勾选设置重量修正
-      </el-button>
-      <el-button type="primary" :disabled="selectedIds.length === 0" @click="batchPrintLabel">
+      </DebounceButton>
+      <DebounceButton
+        type="primary"
+        :disabled="selectedIds.length === 0"
+        :on-click="() => batchPrintLabel()"
+      >
         勾选打印标签
-      </el-button>
-      <el-button type="danger" :disabled="selectedIds.length === 0" @click="deleteSelected">
+      </DebounceButton>
+      <DebounceButton
+        type="danger"
+        :disabled="selectedIds.length === 0"
+        :on-click="() => deleteSelected()"
+      >
         删除勾选
-      </el-button>
+      </DebounceButton>
     </div>
     <div>
       <el-form :inline="true" :model="searchForm" label-width="auto">
@@ -120,9 +136,13 @@
       <el-table-column prop="cloth_id" label="ID" width="160" show-overflow-tooltip />
       <el-table-column label="操作" width="180" show-overflow-tooltip>
         <template #default="scope">
-          <el-button size="small" @click="openDialog('edit', scope.row.cloth_id)">编辑</el-button>
-          <el-button size="small" @click="printClothLabel(scope.row.cloth_id)">打印标签</el-button>
-          <!-- <el-button size="small" @click="openDialog('copy', scope.row.cloth_id)">复制</el-button> -->
+          <DebounceButton size="small" :on-click="() => openDialog('edit', scope.row.cloth_id)"
+            >编辑</DebounceButton
+          >
+          <DebounceButton size="small" :on-click="() => printClothLabel(scope.row.cloth_id)"
+            >打印标签</DebounceButton
+          >
+          <!-- <DebounceButton size="small" :on-click="() => openDialog('copy', scope.row.cloth_id)">复制</DebounceButton> -->
         </template>
       </el-table-column>
       <el-table-column prop="machine_name" label="机台号" width="160" show-overflow-tooltip />
@@ -196,6 +216,7 @@ import utc from 'dayjs/plugin/utc'
 import ClothDialog from './ClothDialog.vue'
 import OrderSelect from './OrderSelect.vue'
 import DecimalDialog from '@/components/DecimalDialog.vue'
+import DebounceButton from '@/components/DebounceButton.vue'
 
 dayjs.extend(utc)
 

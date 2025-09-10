@@ -7,12 +7,15 @@
     :close-on-click-modal="false"
   >
     <div>
-      <el-button type="primary" @click="fetchGrid">刷新</el-button>
-      <el-button type="primary" @click="resetSearch">重置筛选</el-button>
-      <el-button type="primary" :disabled="selectedIds.length === 0" @click="handleSubmit"
-        >选取勾选布匹</el-button
+      <DebounceButton type="primary" :on-click="() => fetchGrid()">刷新</DebounceButton>
+      <DebounceButton type="primary" :on-click="() => resetSearch()">重置筛选</DebounceButton>
+      <DebounceButton
+        type="primary"
+        :disabled="selectedIds.length === 0"
+        :on-click="() => handleSubmit()"
+        >选取勾选布匹</DebounceButton
       >
-      <el-button @click="visible = false">取消</el-button>
+      <DebounceButton :on-click="() => (visible = false)">取消</DebounceButton>
     </div>
     <div>
       <el-form :inline="true" :model="searchForm" label-width="auto">
@@ -134,6 +137,7 @@ import dayjs from 'dayjs'
 import { ElMessage } from 'element-plus'
 import { knit_api } from '@/utils/auth.js'
 import utc from 'dayjs/plugin/utc'
+import DebounceButton from '@/components/DebounceButton.vue'
 
 dayjs.extend(utc)
 
