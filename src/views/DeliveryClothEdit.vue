@@ -16,7 +16,7 @@
     <div>
       <el-button type="primary" @click="fetchGrid">刷新</el-button>
       <el-button type="primary" @click="resetSearch">重置筛选</el-button>
-      <el-button type="primary" @click="openScanner">打开扫码</el-button>
+      <el-button type="primary" @click="scanner.start()">打开扫码</el-button>
       <el-button type="primary" @click="openClothSelect">新增出货布匹</el-button>
       <el-button type="danger" :disabled="selectedIds.length === 0" @click="cancelSelected">
         撤销勾选布匹
@@ -129,12 +129,7 @@
     </el-table>
   </el-dialog>
   <ClothSelect ref="clothSelectRef" @success="handleDialogAddCloth" />
-  <el-dialog v-model="dialogVisible" title="扫码" width="525px" @closed="stopScanner">
-    <div id="qr-scanner" ref="scannerContainer" style="width: 100%"></div>
-    <template #footer>
-      <el-button @click="dialogVisible = false">关闭</el-button>
-    </template>
-  </el-dialog>
+  <QrScanner ref="scanner" @detect="onDetect" />
 </template>
 
 <script setup>
@@ -145,7 +140,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { knit_api } from '@/utils/auth.js'
 import ClothSelect from './ClothSelect.vue'
 import utc from 'dayjs/plugin/utc'
-import { Html5Qrcode, Html5QrcodeScannerState } from 'html5-qrcode'
+import QrScanner from '@/components/QrScanner.vue'
 
 dayjs.extend(utc)
 
@@ -155,6 +150,8 @@ const tableHeight = ref(null)
 const loading = ref(false)
 const gridData = ref([])
 const selectedIds = ref([])
+
+const scanner = ref(null)
 
 const visible = ref(false)
 const recordId = ref(null)
@@ -195,44 +192,7 @@ const emit = defineEmits(['close'])
 
 const titleName = '出货单布匹编辑'
 
-const dialogVisible = ref(false)
-const scannerContainer = ref(null)
-let qrcode_scanner = null
-
-// 打开弹窗并启动扫码
-const openScanner = async () => {
-  dialogVisible.value = true
-  await nextTick()
-  startScanner()
-}
-
-const startScanner = () => {
-  const config = {
-    fps: 6,
-    qrbox: { width: 200, height: 200 },
-    aspectRatio: 1.0,
-  }
-  if (!qrcode_scanner || qrcode_scanner.getState() === Html5QrcodeScannerState.UNKNOWN) {
-    qrcode_scanner = new Html5Qrcode('qr-scanner')
-  }
-  try {
-    qrcode_scanner.start({ facingMode: 'environment' }, config, onScanSuccess)
-  } catch (err) {
-    console.error('启动扫码器失败:', err)
-  }
-}
-
-const stopScanner = () => {
-  try {
-    qrcode_scanner.stop()
-  } catch (err) {
-    console.error('停止扫码器失败:', err)
-  }
-  fetchGrid()
-}
-
-const onScanSuccess = async (decodedText) => {
-  await qrcode_scanner.pause(true)
+const onDetect = async (decodedText) => {
   let cloth_valid_type = '出货成功'
 
   try {
@@ -280,16 +240,8 @@ const onScanSuccess = async (decodedText) => {
     closeOnClickModal: false,
     closeOnPressEscape: false,
   })
-  await qrcode_scanner.resume()
+  scanner.value.resume()
 }
-
-onBeforeUnmount(() => {
-  try {
-    qrcode_scanner.clear()
-  } catch (err) {
-    console.error('清除扫码器失败:', err)
-  }
-})
 
 const handleDialogAddCloth = async (submit_ids) => {
   try {
