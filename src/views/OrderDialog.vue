@@ -195,7 +195,7 @@ const handleSubmit = () => {
   saveDisabled.value = true
   formRef.value.validate(async (valid) => {
     try {
-      if (!valid) {
+      if (valid) {
         const input_values = {}
         for (const key in form.value) {
           const value = form.value[key]

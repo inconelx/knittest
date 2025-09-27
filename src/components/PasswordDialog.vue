@@ -72,6 +72,7 @@ const open = async () => {
   }
   resetForm()
   visible.value = true
+  saveDisabled.value = false
 }
 
 const handleSubmit = () => {

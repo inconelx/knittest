@@ -16,6 +16,10 @@
     </div>
     <div>
       <el-form :inline="true" :model="searchForm" label-width="auto">
+        <el-form-item label="精确筛选">
+          <el-checkbox v-model="searchForm.use_accurate" />
+        </el-form-item>
+
         <el-form-item label="布匹ID">
           <el-input v-model="searchForm.filters.cloth_id" style="width: 160px" />
         </el-form-item>
@@ -54,7 +58,7 @@
         </el-form-item>
       </el-form>
     </div>
-    <div>
+    <div style="display: flex;">
       <el-pagination
         background
         layout="prev, pager, next, total"
@@ -63,6 +67,7 @@
         :total="pagination.total"
         @current-change="handlePageChange"
       />
+      <div class="el-pagination">Sum {{ pagination.sum_weight }}</div>
     </div>
 
     <el-table
@@ -95,7 +100,7 @@
         width="160"
         show-overflow-tooltip
       />
-      <el-table-column prop="order_no" label="产品计划单号" width="160" show-overflow-tooltip />
+      <el-table-column prop="order_no" label="计划单号" width="210" show-overflow-tooltip />
       <el-table-column prop="order_cloth_name" label="产品名称" width="160" show-overflow-tooltip />
       <el-table-column
         prop="order_cloth_color"
@@ -155,6 +160,7 @@ const searchForm = ref({
     order_cloth_color: null,
     add_user_name: null,
   },
+  use_accurate: false,
   fuzzy_fields: {
     cloth_id: null,
     machine_name: null,
@@ -172,6 +178,7 @@ const pagination = ref({
   page: 1,
   pageSize: 100,
   total: 0,
+  sum_weight: 0,
 })
 
 const emit = defineEmits(['success'])
@@ -212,11 +219,12 @@ const fetchGrid = async () => {
       page: pagination.value.page,
       page_size: pagination.value.pageSize,
       filters: rawFilters,
-      fuzzy_fields: searchForm.value.fuzzy_fields,
+      fuzzy_fields: searchForm.value.use_accurate ? {} : searchForm.value.fuzzy_fields,
       date_ranges: searchForm.value.date_ranges,
     })
     gridData.value = res.data.records
     pagination.value.total = res.data.total
+    pagination.value.sum_weight = res.data.sum_weight
     tableHeightSet()
   } catch (err) {
     ElMessage.error('加载失败：' + (err.response?.data?.error || err.message))

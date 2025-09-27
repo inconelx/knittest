@@ -7,6 +7,10 @@
     </div>
     <div>
       <el-form :inline="true" :model="searchForm" label-width="auto">
+        <el-form-item label="精确筛选">
+          <el-checkbox v-model="searchForm.use_accurate" />
+        </el-form-item>
+
         <el-form-item label="布匹ID">
           <el-input v-model="searchForm.filters.cloth_id" style="width: 160px" />
         </el-form-item>
@@ -92,7 +96,7 @@
         width="160"
         show-overflow-tooltip
       />
-      <el-table-column prop="order_no" label="产品计划单号" width="160" show-overflow-tooltip />
+      <el-table-column prop="order_no" label="产品计划单号" width="210" show-overflow-tooltip />
       <el-table-column prop="order_cloth_name" label="产品名称" width="160" show-overflow-tooltip />
       <el-table-column
         prop="order_cloth_color"
@@ -161,6 +165,7 @@ const searchForm = ref({
     order_cloth_color: null,
     add_user_name: null,
   },
+  use_accurate: false,
   fuzzy_fields: {
     cloth_id: null,
     machine_name: null,
@@ -224,7 +229,7 @@ const fetchGrid = async () => {
       page: pagination.value.page,
       page_size: pagination.value.pageSize,
       filters: rawFilters,
-      fuzzy_fields: searchForm.value.fuzzy_fields,
+      fuzzy_fields: searchForm.value.use_accurate ? {} : searchForm.value.fuzzy_fields,
       date_ranges: searchForm.value.date_ranges,
     })
     gridData.value = res.data.records

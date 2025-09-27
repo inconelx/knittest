@@ -14,12 +14,18 @@
 
     <div>
       <el-form :inline="true" :model="searchForm" label-width="auto">
+        <el-form-item label="精确筛选">
+          <el-checkbox v-model="searchForm.use_accurate" />
+        </el-form-item>
+
         <el-form-item label="出货单号">
           <el-input v-model="searchForm.filters.delivery_no" style="width: 160px" />
         </el-form-item>
+
         <el-form-item label="客户名称">
           <el-input v-model="searchForm.filters.company_name" style="width: 160px" />
         </el-form-item>
+        
         <el-form-item label="客户简称">
           <el-input v-model="searchForm.filters.company_abbreviation" style="width: 160px" />
         </el-form-item>
@@ -147,6 +153,7 @@ const searchForm = ref({
     company_name: null,
     company_abbreviation: null,
   },
+  use_accurate: false,
   fuzzy_fields: {
     delivery_no: null,
     company_name: null,
@@ -225,7 +232,7 @@ const fetchGrid = async () => {
       page: pagination.value.page,
       page_size: pagination.value.pageSize,
       filters: rawFilters,
-      fuzzy_fields: searchForm.value.fuzzy_fields,
+      fuzzy_fields: searchForm.value.use_accurate ? {} : searchForm.value.fuzzy_fields,
       date_ranges: searchForm.value.date_ranges,
     })
     gridData.value = res.data.records

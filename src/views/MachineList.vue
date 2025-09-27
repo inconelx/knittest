@@ -13,19 +13,23 @@
     </div>
     <div>
       <el-form :inline="true" :model="searchForm" label-width="auto">
+        <el-form-item label="精确筛选">
+          <el-checkbox v-model="searchForm.use_accurate" />
+        </el-form-item>
+
         <el-form-item label="机台号">
           <el-input v-model="searchForm.filters.machine_name" style="width: 160px" />
         </el-form-item>
 
-        <el-form-item label="生产计划单号">
+        <el-form-item label="计划单号">
           <el-input v-model="searchForm.filters.order_no" style="width: 160px" />
         </el-form-item>
 
-        <el-form-item label="生产产品名称">
+        <el-form-item label="产品名称">
           <el-input v-model="searchForm.filters.order_cloth_name" style="width: 160px" />
         </el-form-item>
 
-        <el-form-item label="生产产品颜色">
+        <el-form-item label="产品颜色">
           <el-input v-model="searchForm.filters.order_cloth_color" style="width: 160px" />
         </el-form-item>
 
@@ -78,16 +82,11 @@
         </template>
       </el-table-column>
       <el-table-column prop="machine_name" label="机台号" width="160" show-overflow-tooltip />
-      <el-table-column prop="order_no" label="生产计划单号" width="160" show-overflow-tooltip />
-      <el-table-column
-        prop="order_cloth_name"
-        label="生产产品名称"
-        width="160"
-        show-overflow-tooltip
-      />
+      <el-table-column prop="order_no" label="计划单号" width="160" show-overflow-tooltip />
+      <el-table-column prop="order_cloth_name" label="产品名称" width="160" show-overflow-tooltip />
       <el-table-column
         prop="order_cloth_color"
-        label="生产产品颜色"
+        label="产品颜色"
         width="160"
         show-overflow-tooltip
       />
@@ -142,6 +141,7 @@ const searchForm = ref({
     order_cloth_name: null,
     order_cloth_color: null,
   },
+  use_accurate: false,
   fuzzy_fields: {
     machine_name: null,
     order_no: null,
@@ -208,7 +208,7 @@ const fetchGrid = async () => {
       page: pagination.value.page,
       page_size: pagination.value.pageSize,
       filters: rawFilters,
-      fuzzy_fields: searchForm.value.fuzzy_fields,
+      fuzzy_fields: searchForm.value.use_accurate ? {} : searchForm.value.fuzzy_fields,
       date_ranges: searchForm.value.date_ranges,
     })
     gridData.value = res.data.records

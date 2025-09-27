@@ -39,6 +39,9 @@
 
     <div>
       <el-form :inline="true" :model="searchForm" label-width="auto">
+        <el-form-item label="精确筛选">
+          <el-checkbox v-model="searchForm.use_accurate" />
+        </el-form-item>
         <el-form-item label="账号">
           <el-input v-model="searchForm.filters.user_name" style="width: 160px" />
         </el-form-item>
@@ -195,6 +198,7 @@ const searchForm = ref({
     user_status: null,
     print_status: null,
   },
+  use_accurate: false,
   fuzzy_fields: {
     user_name: null,
     real_name: null,
@@ -249,7 +253,7 @@ const fetchGrid = async () => {
       page: pagination.value.page,
       page_size: pagination.value.pageSize,
       filters: rawFilters,
-      fuzzy_fields: searchForm.value.fuzzy_fields,
+      fuzzy_fields: searchForm.value.use_accurate ? {} : searchForm.value.fuzzy_fields,
       date_ranges: searchForm.value.date_ranges,
     })
     gridData.value = res.data.records
