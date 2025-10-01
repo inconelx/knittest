@@ -32,6 +32,7 @@
       >
         勾选解封
       </el-button>
+      <el-button type="primary" @click="stopPrinter"> 中断打印端 </el-button>
       <el-button type="danger" :disabled="selectedIds.length === 0" @click="deleteSelected">
         删除勾选
       </el-button>
@@ -336,6 +337,19 @@ const batchUserSet = async (set_data, set_text) => {
       ElMessage.error(set_text + ' 成功：' + (err.response?.data?.error || err.message))
       console.error(err)
     }
+  }
+}
+
+const stopPrinter = async () => {
+  try {
+    await knit_api.post('/api/send-print', {
+      stop_printer: true,
+    })
+    ElMessage.success('中断打印端成功')
+    selectedIds.value = []
+  } catch (err) {
+    ElMessage.error('中断打印端失败：' + (err.response?.data?.error || err.message))
+    console.error(err)
   }
 }
 
