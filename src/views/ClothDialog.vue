@@ -269,7 +269,7 @@ const handleSubmit = (is_print) => {
           ElMessage.success('更新成功')
         }
         visible.value = false
-        emit('success', is_print, recordId.value) // 通知父组件刷新列表等
+        emit('success', is_print, recordId.value, input_values['cloth_machine_id']) // 通知父组件刷新列表等
       }
     } catch (err) {
       ElMessage.error('保存失败：' + (err.response?.data?.error || err.message))

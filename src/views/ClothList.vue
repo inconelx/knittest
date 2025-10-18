@@ -280,10 +280,21 @@ const batchPrintLabel = async () => {
   }
 }
 
-const handleDialogSubmit = async (is_print, cloth_id) => {
+const handleDialogSubmit = async (is_print, cloth_id, machine_id) => {
   fetchGrid()
   if (is_print) {
     printClothLabel(cloth_id)
+  }
+  try {
+    await knit_api.post('/api/generic/update', {
+      table_name: 'knit_machine',
+      pk_values: [machine_id],
+      json_data: {
+        machine_last_input_time: 0,
+      },
+    })
+  } catch (err) {
+    console.error(err)
   }
 }
 

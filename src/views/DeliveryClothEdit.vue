@@ -67,7 +67,7 @@
         </el-form-item>
       </el-form>
     </div>
-    <div style="display: flex;">
+    <div style="display: flex">
       <el-pagination
         background
         layout="prev, pager, next, total"
@@ -117,6 +117,12 @@
         width="160"
         show-overflow-tooltip
       />
+      <el-table-column prop="delivery_no" label="出货单号" width="160" show-overflow-tooltip />
+      <el-table-column prop="delivery_time" label="出货时间" width="160" show-overflow-tooltip>
+        <template #default="{ row }">
+          {{ formatDate(row.delivery_time) }}
+        </template>
+      </el-table-column>
       <el-table-column
         prop="cloth_origin_weight"
         label="原始重量"
