@@ -117,7 +117,6 @@
         width="160"
         show-overflow-tooltip
       />
-      <el-table-column prop="delivery_no" label="出货单号" width="160" show-overflow-tooltip />
       <el-table-column prop="delivery_time" label="出货时间" width="160" show-overflow-tooltip>
         <template #default="{ row }">
           {{ formatDate(row.delivery_time) }}
