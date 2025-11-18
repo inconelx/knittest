@@ -203,6 +203,7 @@ const fetchGrid = async () => {
       page_size: pagination.value.pageSize,
       filters: rawFilters,
       fuzzy_fields: searchForm.value.use_accurate ? {} : searchForm.value.fuzzy_fields,
+      order_fields: { add_time: false },
       date_ranges: searchForm.value.date_ranges,
     })
     gridData.value = res.data.records

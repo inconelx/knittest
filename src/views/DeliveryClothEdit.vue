@@ -16,7 +16,8 @@
     <div>
       <el-button type="primary" @click="fetchGrid">刷新</el-button>
       <el-button type="primary" @click="resetSearch">重置筛选</el-button>
-      <el-button type="primary" @click="scanner.start()">打开扫码</el-button>
+      <el-button type="primary" @click="startScanner('out')">扫码出货</el-button>
+      <el-button type="primary" @click="startScanner('cancel')">扫码撤销</el-button>
       <el-button type="primary" @click="openClothSelect">新增出货布匹</el-button>
       <el-button type="danger" :disabled="selectedIds.length === 0" @click="cancelSelected">
         撤销勾选布匹
@@ -204,27 +205,41 @@ const emit = defineEmits(['close'])
 
 const titleName = '出货单布匹编辑'
 
-const onDetect = async (decodedText) => {
-  let cloth_valid_type = '出货成功'
+const scanner_operate = ref('out')
+const scanner_operate_hint = ref({
+  out: '出货',
+  cancel: '撤销出货',
+})
 
+const startScanner = (operate) => {
+  if (operate in scanner_operate_hint.value) {
+    scanner_operate.value = operate
+    scanner.value.start()
+  }
+}
+
+const onDetect = async (decodedText) => {
+  let cloth_valid_type = '成功'
   try {
     const res = await knit_api.post('/api/delivery/cloth/update', {
       delivery_id: recordId.value,
-      cloth_operate: 'out',
+      cloth_operate: scanner_operate,
       pk_values: [decodedText],
     })
   } catch (error) {
     if (error.response?.data['errorType'] === 0) {
-      cloth_valid_type = '出货失败，错误的请求'
+      cloth_valid_type = '失败，错误的请求'
     } else if (error.response?.data['errorType'] === 1) {
-      cloth_valid_type = '出货失败，布匹ID错误或不存在'
+      cloth_valid_type = '失败，布匹ID错误或不存在'
     } else if (error.response?.data['errorType'] === 2) {
-      cloth_valid_type = '出货失败，此布匹已出货'
+      cloth_valid_type = '失败，此布匹已出货'
+    } else if (error.response?.data['errorType'] === 3) {
+      cloth_valid_type = '失败，不能取消未出货布匹或其他出货单布匹'
     } else {
-      cloth_valid_type = '出货失败，未知错误'
+      cloth_valid_type = '失败，未知错误'
     }
   }
-  if (cloth_valid_type === '出货成功') {
+  if (cloth_valid_type === '成功') {
     fetchGrid()
   }
   let tmp_box_type = 'success'
@@ -232,7 +247,7 @@ const onDetect = async (decodedText) => {
   const osc = ctx.createOscillator()
   const gainNode = ctx.createGain()
   gainNode.gain.value = 2
-  if (cloth_valid_type === '出货成功') {
+  if (cloth_valid_type === '成功') {
     osc.type = 'sine'
     osc.frequency.value = 980
   } else {
@@ -245,7 +260,7 @@ const onDetect = async (decodedText) => {
   // osc.connect(ctx.destination)
   osc.start()
   osc.stop(ctx.currentTime + 0.25)
-  await ElMessageBox.alert(cloth_valid_type, '提示', {
+  await ElMessageBox.alert(scanner_operate_hint[scanner_operate] + cloth_valid_type, '提示', {
     confirmButtonText: '继续',
     type: tmp_box_type,
     showClose: false,
@@ -311,6 +326,7 @@ const fetchGrid = async () => {
       page_size: pagination.value.pageSize,
       filters: rawFilters,
       fuzzy_fields: searchForm.value.use_accurate ? {} : searchForm.value.fuzzy_fields,
+      order_fields: { delivery_time: false },
       date_ranges: searchForm.value.date_ranges,
     })
     gridData.value = res.data.records
