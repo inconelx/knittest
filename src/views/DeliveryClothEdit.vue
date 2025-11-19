@@ -223,7 +223,7 @@ const onDetect = async (decodedText) => {
   try {
     const res = await knit_api.post('/api/delivery/cloth/update', {
       delivery_id: recordId.value,
-      cloth_operate: scanner_operate,
+      cloth_operate: scanner_operate.value,
       pk_values: [decodedText],
     })
   } catch (error) {
@@ -260,7 +260,7 @@ const onDetect = async (decodedText) => {
   // osc.connect(ctx.destination)
   osc.start()
   osc.stop(ctx.currentTime + 0.25)
-  await ElMessageBox.alert(scanner_operate_hint[scanner_operate] + cloth_valid_type, '提示', {
+  await ElMessageBox.alert(scanner_operate_hint.value[scanner_operate.value] + cloth_valid_type, '提示', {
     confirmButtonText: '继续',
     type: tmp_box_type,
     showClose: false,
